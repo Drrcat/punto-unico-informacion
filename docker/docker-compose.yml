@@ -1,0 +1,55 @@
+# OrientaSede (Punto Único de Información) - orquestación del backend y la base de datos
+#
+# Se ejecuta desde la raíz del repositorio:
+#     docker compose -f docker/docker-compose.yml up --build -d
+#
+# Las variables se leen del archivo .env de la raíz (ver .env.example).
+
+name: orientasede
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: ../.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - interna
+    # No se publica ningún puerto: la base de datos solo es accesible desde el
+    # contenedor del backend, a través de la red interna.
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    env_file: ../.env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - fotos:/var/lib/orientasede/fotos
+    secrets:
+      - source: google_vision
+        target: google-vision.json
+    networks:
+      - interna
+
+volumes:
+  pgdata:
+  fotos:
+
+networks:
+  interna:
+
+secrets:
+  google_vision:
+    file: ../secrets/google-vision.json
