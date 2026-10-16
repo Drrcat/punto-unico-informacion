@@ -1,0 +1,91 @@
+/* ===== Colores institucionales (variables reutilizables) ===== */
+:root {
+  --azul: #002A5C;       /* azul marino Duoc */
+  --amarillo: #FFC72C;   /* amarillo Duoc */
+  --fondo: #f4f5f7;
+  --texto: #1a1a1a;
+  --blanco: #ffffff;
+}
+
+/* ===== Base ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background-color: var(--fondo);
+  color: var(--texto);
+}
+
+/* ===== Barra superior (marca) ===== */
+.barra-superior {
+  background-color: var(--azul);
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+}
+.logo { font-size: 28px; font-weight: bold; color: var(--blanco); }
+.logo-uc { color: var(--amarillo); }
+.sede {
+  color: var(--blanco);
+  margin-left: 16px;
+  padding-left: 16px;
+  border-left: 2px solid var(--amarillo);
+  font-size: 16px;
+}
+
+/* ===== Título ===== */
+.titulo { text-align: center; padding: 32px 20px 8px; }
+.titulo h1 { color: var(--azul); font-size: 40px; }
+.titulo p { color: #555; font-size: 18px; margin-top: 6px; }
+
+/* ===== Contenedor central ===== */
+.contenedor { max-width: 800px; margin: 0 auto; padding: 24px 20px; }
+
+/* ===== Buscador ===== */
+#buscador {
+  width: 100%;
+  padding: 18px 22px;
+  font-size: 20px;
+  border: 2px solid #ccc;
+  border-radius: 14px;
+  outline: none;
+  margin-bottom: 28px;
+}
+#buscador:focus { border-color: var(--azul); }
+
+/* ===== Tarjetas de preguntas ===== */
+.faq-card {
+  background: var(--blanco);
+  border-radius: 14px;
+  border-left: 6px solid var(--amarillo);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.faq-pregunta {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 22px 24px;
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--azul);
+  cursor: pointer;
+}
+.faq-respuesta {
+  padding: 0 24px 22px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: #333;
+  display: none;   /* oculta por defecto */
+}
+.faq-card.abierta .faq-respuesta { display: block; }  /* se muestra al abrir */
+
+/* ===== Pie ===== */
+.pie {
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  padding: 24px;
+}
