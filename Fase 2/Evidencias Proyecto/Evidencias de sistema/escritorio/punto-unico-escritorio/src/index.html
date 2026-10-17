@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>Punto Único de Información · Administración</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./renderer.js" defer></script>
+</head>
+<body>
+  <div id="loginScreen" class="login-screen">
+    <section class="login-panel">
+      <div class="brand-mark large">PU</div>
+      <p class="eyebrow">DUOC UC · PUENTE ALTO</p>
+      <h1>Punto Único de Información</h1>
+      <p class="muted login-intro">Panel administrativo para gestionar la información que consulta el tótem estudiantil.</p>
+      <form id="loginForm" class="login-form">
+        <label for="loginEmail">Correo del personal</label>
+        <input id="loginEmail" name="email" type="email" autocomplete="username" placeholder="admin@demo.local" required>
+        <label for="loginPassword">Contraseña</label>
+        <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="Ingresa tu contraseña" required>
+        <p id="loginError" class="form-error" role="alert" hidden></p>
+        <button class="button primary full-width" type="submit">Ingresar al panel <span aria-hidden="true">→</span></button>
+      </form>
+      <div class="demo-note">
+        <span class="demo-dot"></span>
+        <div><strong>Modo de demostración</strong><br><span>Correo: admin@demo.local · Clave: demo1234</span></div>
+      </div>
+      <p class="login-footnote">Este acceso de ejemplo no reemplaza la autenticación institucional real.</p>
+    </section>
+    <aside class="login-aside">
+      <div class="aside-orb orb-one"></div><div class="aside-orb orb-two"></div>
+      <div class="aside-content">
+        <span class="pill light-pill">Administración del tótem</span>
+        <h2>Información clara, en un solo lugar.</h2>
+        <p>Gestiona salas, contactos académicos y respuestas frecuentes desde una interfaz de escritorio.</p>
+        <div class="aside-preview">
+          <div class="preview-top"><span></span><span></span><span></span><b>Vista general</b></div>
+          <div class="preview-stat-row"><div><i></i><i></i><i></i></div><div><i></i><i></i><i></i></div><div><i></i><i></i><i></i></div></div>
+          <div class="preview-line long"></div><div class="preview-line medium"></div><div class="preview-line short"></div>
+        </div>
+      </div>
+      <div class="aside-footer">CAPSTONE · INGENIERÍA EN INFORMÁTICA</div>
+    </aside>
+  </div>
+
+  <div id="appScreen" class="app-screen" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-brand"><div class="brand-mark">PU</div><div><strong>Punto Único</strong><small>Panel administrativo</small></div></div>
+      <div class="nav-label">MENÚ PRINCIPAL</div>
+      <nav class="side-nav" aria-label="Menú principal">
+        <button class="nav-item active" data-section="overview"><span class="nav-icon">▦</span>Resumen</button>
+        <button class="nav-item" data-section="rooms"><span class="nav-icon">⌂</span>Salas <span class="nav-count" id="roomNavCount">0</span></button>
+        <button class="nav-item" data-section="coordinators"><span class="nav-icon">♙</span>Coordinadores <span class="nav-count" id="coordinatorNavCount">0</span></button>
+        <button class="nav-item" data-section="faqs"><span class="nav-icon">?</span>Preguntas frecuentes <span class="nav-count" id="faqNavCount">0</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="environment-card"><span class="status-dot"></span><div><strong>Modo local</strong><small>Datos de demostración</small></div></div>
+        <button id="logoutButton" class="logout-button"><span class="nav-icon">↪</span>Cerrar sesión</button>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div><p class="eyebrow" id="breadcrumb">PANEL ADMINISTRATIVO</p><div class="topbar-title" id="topbarTitle">Resumen</div></div>
+        <div class="user-chip"><div class="avatar">AD</div><div><strong>Administrador demo</strong><small>Personal autorizado · prueba local</small></div><span class="chevron">⌄</span></div>
+      </header>
+      <section id="appContent" class="content-area" aria-live="polite"></section>
+      <footer class="app-footer"><span>Punto Único de Información</span><span>Prototipo de escritorio · <span id="runtimeLabel">Electron</span></span></footer>
+    </main>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
