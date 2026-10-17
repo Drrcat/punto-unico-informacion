@@ -35,7 +35,7 @@ const ENTITY_CONFIG = {
     fields: [
       { name: 'name', label: 'Nombre completo', placeholder: 'Ej. Camila González', required: true, full: true },
       { name: 'career', label: 'Carrera', placeholder: 'Ej. Ingeniería en Informática', required: true, full: true },
-      { name: 'email', label: 'Correo institucional', placeholder: 'nombre@duocuc.cl', type: 'email', required: true },
+      { name: 'email', label: 'Correo institucional', placeholder: 'nombre@institucion.edu', type: 'email', required: true },
       { name: 'phone', label: 'Teléfono o anexo', placeholder: 'Ej. 225555555', required: false }
     ],
     columns: [

@@ -38,7 +38,7 @@ No uses estas credenciales en producción. Esta pantalla es una simulación de a
 
 ## Importante: estado del backend
 
-Los módulos guardan los registros localmente y **no se conectan todavía a las API del proyecto**. Antes de integrar el backend, se deben confirmar las rutas reales, los métodos HTTP, los esquemas de solicitud/respuesta, la estrategia de autenticación y las reglas de autorización. Los datos precargados son ejemplos ficticios y no corresponden a un directorio oficial de Duoc UC.
+Los módulos guardan los registros localmente y **no se conectan todavía a las API del proyecto**. Antes de integrar el backend, se deben confirmar las rutas reales, los métodos HTTP, los esquemas de solicitud/respuesta, la estrategia de autenticación y las reglas de autorización. Los datos precargados son ejemplos ficticios y no corresponden a un directorio oficial de la Institución Educativa.
 
 ## Próximos pasos recomendados
 
