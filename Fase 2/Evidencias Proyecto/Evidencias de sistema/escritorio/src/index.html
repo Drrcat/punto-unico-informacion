@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' http://localhost:3000; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>Punto Único de Información · Administración</title>
   <link rel="stylesheet" href="./styles.css">
   <script src="./renderer.js" defer></script>
@@ -56,7 +56,7 @@
         <button class="nav-item" data-section="faqs"><span class="nav-icon">?</span>Preguntas frecuentes <span class="nav-count" id="faqNavCount">0</span></button>
       </nav>
       <div class="sidebar-bottom">
-        <div class="environment-card"><span class="status-dot"></span><div><strong>Modo local</strong><small>Datos de demostración</small></div></div>
+        <div class="environment-card"><span class="status-dot"></span><div><strong>API de preguntas</strong><small id="apiStatus">Sin conectar</small></div></div>
         <button id="logoutButton" class="logout-button"><span class="nav-icon">↪</span>Cerrar sesión</button>
       </div>
     </aside>

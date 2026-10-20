@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   ParseIntPipe,
+  Patch,
 } from '@nestjs/common';
 import { FaqsService } from './faqs.service';
 import { CreateFaqDto } from './dto/create-faq.dto';
@@ -22,6 +23,16 @@ export class FaqsController {
     return this.faqsService.findAll();
   }
 
+  @Get('admin')
+  findAllForAdmin() {
+    return this.faqsService.findAllForAdmin();
+  }
+
+  @Get('categorias')
+  findCategories() {
+    return this.faqsService.findCategories();
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.faqsService.findOne(id);
@@ -34,6 +45,11 @@ export class FaqsController {
 
   @Put(':id')
   update(@Param('id', ParseIntPipe) id: number, @Body() datos: UpdateFaqDto) {
+    return this.faqsService.update(id, datos);
+  }
+
+  @Patch(':id')
+  patch(@Param('id', ParseIntPipe) id: number, @Body() datos: UpdateFaqDto) {
     return this.faqsService.update(id, datos);
   }
 

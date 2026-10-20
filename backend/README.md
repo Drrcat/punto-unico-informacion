@@ -1,102 +1,57 @@
 # OrientaSede API (backend)
 
-API REST del Tótem OrientaSede. Administra las **Preguntas Frecuentes (FAQ)** que muestra la pantalla `faq.html` del tótem.
-
-- **NestJS** (framework de Node.js con TypeScript)
-- **Prisma** (acceso a la base de datos)
-- **PostgreSQL** (base de datos)
-- **Jest + Supertest** (pruebas)
+API REST de NestJS que administra las preguntas frecuentes almacenadas en PostgreSQL mediante Prisma.
 
 ## Endpoints
 
-| Método | Ruta | Qué hace | Respuestas |
-|---|---|---|---|
-| GET | `/` | Chequeo de que la API está funcionando | 200 |
-| GET | `/faqs` | Lista todas las FAQ (ordenadas por id) | 200 |
-| GET | `/faqs/:id` | Devuelve una FAQ | 200 · 404 si no existe · 400 si el id no es número |
-| POST | `/faqs` | Crea una FAQ | 201 · 400 si faltan datos |
-| PATCH | `/faqs/:id` | Edita una FAQ (uno o ambos campos) | 200 · 404 · 400 |
-| DELETE | `/faqs/:id` | Borra una FAQ y devuelve la borrada | 200 · 404 |
+| Método | Ruta | Qué hace |
+|---|---|---|
+| GET | `/` | Comprueba que la API está funcionando |
+| GET | `/faqs` | Lista solo las preguntas publicadas para el tótem |
+| GET | `/faqs/admin` | Lista todas las preguntas, incluidos los borradores |
+| GET | `/faqs/categorias` | Devuelve las categorías disponibles para el formulario |
+| GET | `/faqs/:id` | Devuelve una pregunta publicada por id |
+| POST | `/faqs` | Crea una pregunta frecuente |
+| PATCH / PUT | `/faqs/:id` | Actualiza los campos enviados |
+| DELETE | `/faqs/:id` | Elimina una pregunta frecuente |
 
-**Body para POST / PATCH:**
+El cuerpo de `POST /faqs` requiere pregunta, respuesta y una categoría existente:
 
 ```json
 {
   "pregunta": "¿Cuál es el horario de la biblioteca?",
-  "respuesta": "De lunes a viernes de 08:00 a 21:00."
+  "respuesta": "De lunes a viernes de 08:00 a 21:00.",
+  "categoria_id": 1,
+  "publicada": false
 }
 ```
 
-Reglas de validación (`src/faqs/dto/create-faq.dto.ts`):
-- `pregunta`: texto obligatorio, máximo 200 caracteres.
-- `respuesta`: texto obligatorio, máximo 2000 caracteres.
-- Si se envían campos extra, la API responde 400.
+`area_id` y `publicada` son opcionales. En `PATCH` o `PUT`, todos los campos editables son opcionales. La API valida tipos, campos requeridos, longitud y campos adicionales.
 
-**Ejemplo con curl:**
+La tabla `pregunta_frecuente` exige el id de un usuario autor. Mientras el escritorio use el inicio de sesión de demostración, el backend lo toma de `FAQ_CREATED_BY_ID`. Configura esta variable con el id de un registro existente en `usuario`; si falta, el endpoint de creación responderá con un error explícito. La base también debe tener al menos una fila en `categoria_faq`.
 
-```bash
-curl http://localhost:3000/faqs
-curl -X POST http://localhost:3000/faqs \
-  -H "Content-Type: application/json" \
-  -d '{"pregunta":"¿Hay estacionamiento?","respuesta":"Sí, en el subterráneo del Edificio A."}'
-```
+Los endpoints CRUD todavía no autentican al solicitante. Utiliza esta integración solo en desarrollo o en una red controlada hasta conectar la autenticación institucional.
 
-## Cómo correrlo (sin Docker)
+## Ejecutar localmente
 
-Requisitos: Node.js 22 o superior y PostgreSQL corriendo.
+Requisitos: Node.js 20 o superior, PostgreSQL y `DATABASE_URL` configurada para Prisma.
 
-```bash
-# 1. Instalar dependencias
+```powershell
 npm install
-
-# 2. Crear el archivo .env a partir de la plantilla y poner tu conexión
-cp .env.example .env
-
-# 3. Crear la tabla Faq en la base de datos y generar el cliente de Prisma
-npx prisma migrate deploy
 npx prisma generate
-
-# 4. Cargar las FAQ de ejemplo (solo si la tabla está vacía)
-npm run db:seed
-#    Para borrar todo y volver a los datos de ejemplo:
-#    SEED_REINICIAR=1 npm run db:seed
-
-# 5. Levantar la API en modo desarrollo (se reinicia al guardar cambios)
+$env:FAQ_CREATED_BY_ID = "1" # Cambiar por un id de usuario que exista en la base
 npm run start:dev
 ```
 
-La API queda en http://localhost:3000.
+La API queda en `http://localhost:3000`, la dirección que usa la aplicación de escritorio. Si se ejecuta con Docker Compose, agrega `FAQ_CREATED_BY_ID` al archivo `.env` raíz para entregarlo al contenedor.
 
-Para correrla con Docker, ver el [README principal](../README.md).
+Para la configuración con Docker, consulta el [README principal](../README.md).
 
 ## Pruebas
 
-```bash
-npm test            # pruebas unitarias (servicio y controlador)
-npm run test:e2e    # pruebas end-to-end de todas las rutas HTTP
-npm run test:cov    # pruebas unitarias + reporte de cobertura
+```powershell
+npm test
+npm run test:e2e
 ```
 
-Ninguna prueba necesita PostgreSQL: la base de datos se reemplaza por una versión falsa.
-
-- `src/faqs/faqs.service.spec.ts`: lógica del servicio (incluye los casos 404).
-- `src/faqs/faqs.controller.spec.ts`: que cada ruta llame al método correcto.
-- `test/app.e2e-spec.ts`: peticiones HTTP reales a la API completa, con validaciones, 400 y 404.
-
-## Estructura
-
-```
-backend/
-├── prisma/
-│   ├── schema.prisma        # modelo Faq (tabla de la base)
-│   ├── migrations/          # historial de cambios de la base
-│   └── seed.js              # FAQ de ejemplo (ficticias)
-├── src/
-│   ├── main.ts              # punto de entrada
-│   ├── configurar-app.ts    # CORS + validación (compartido con las pruebas e2e)
-│   ├── app.module.ts        # módulo raíz
-│   ├── prisma/              # conexión a la base (un solo cliente para toda la app)
-│   └── faqs/                # módulo FAQ: controlador (rutas), servicio (lógica), DTO (validación)
-├── test/app.e2e-spec.ts     # pruebas end-to-end
-└── Dockerfile
-```
+Las pruebas reemplazan Prisma por una implementación en memoria; no requieren PostgreSQL.

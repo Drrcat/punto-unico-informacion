@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { FaqsService } from './faqs.service';
@@ -9,6 +13,7 @@ import { CreateFaqDto } from './dto/create-faq.dto';
 // por funciones falsas (jest.fn) para controlar qué "devuelve la base".
 describe('FaqsService', () => {
   let service: FaqsService;
+  const creadorIdAnterior = process.env.FAQ_CREATED_BY_ID;
 
   const faqEjemplo = {
     id: 1,
@@ -18,12 +23,11 @@ describe('FaqsService', () => {
     area: null,
   };
 
-  const datosNuevos: CreateFaqDto = {
+  const datosNuevos = {
     pregunta: 'Nueva',
     respuesta: 'Resp',
     categoria_id: 1,
-    creado_por_id: 1,
-  };
+  } satisfies CreateFaqDto;
 
   // Error que lanza Prisma cuando una llave foránea apunta a algo que no existe
   const errorLlaveForanea = new Prisma.PrismaClientKnownRequestError(
@@ -33,6 +37,9 @@ describe('FaqsService', () => {
 
   // Prisma falso: solo los métodos que usa el servicio
   const prismaMock = {
+    categoria_faq: {
+      findMany: jest.fn(),
+    },
     pregunta_frecuente: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
@@ -46,6 +53,7 @@ describe('FaqsService', () => {
 
   beforeEach(async () => {
     jest.resetAllMocks();
+    process.env.FAQ_CREATED_BY_ID = '1';
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -55,6 +63,14 @@ describe('FaqsService', () => {
     }).compile();
 
     service = module.get<FaqsService>(FaqsService);
+  });
+
+  afterAll(() => {
+    if (creadorIdAnterior === undefined) {
+      delete process.env.FAQ_CREATED_BY_ID;
+    } else {
+      process.env.FAQ_CREATED_BY_ID = creadorIdAnterior;
+    }
   });
 
   describe('findAll', () => {
@@ -68,6 +84,41 @@ describe('FaqsService', () => {
           orderBy: { id: 'asc' },
         }),
       );
+    });
+  });
+
+  describe('findAllForAdmin', () => {
+    it('devuelve publicadas y borradores ordenados por id', async () => {
+      tabla.findMany.mockResolvedValue([faqEjemplo]);
+
+      await expect(service.findAllForAdmin()).resolves.toEqual([faqEjemplo]);
+      expect(tabla.findMany).toHaveBeenCalledWith({
+        orderBy: { id: 'asc' },
+        select: {
+          id: true,
+          pregunta: true,
+          respuesta: true,
+          publicada: true,
+          categoria_id: true,
+          categoria: { select: { nombre: true } },
+        },
+      });
+    });
+  });
+
+  describe('findCategories', () => {
+    it('devuelve las categorías en orden de visualización', async () => {
+      prismaMock.categoria_faq.findMany.mockResolvedValue([
+        { id: 1, nombre: 'General' },
+      ]);
+
+      await expect(service.findCategories()).resolves.toEqual([
+        { id: 1, nombre: 'General' },
+      ]);
+      expect(prismaMock.categoria_faq.findMany).toHaveBeenCalledWith({
+        orderBy: [{ orden: 'asc' }, { nombre: 'asc' }],
+        select: { id: true, nombre: true },
+      });
     });
   });
 
@@ -95,7 +146,23 @@ describe('FaqsService', () => {
       tabla.create.mockResolvedValue({ id: 2, ...datosNuevos });
 
       await service.create(datosNuevos);
-      expect(tabla.create).toHaveBeenCalledWith({ data: datosNuevos });
+      expect(tabla.create).toHaveBeenCalledWith({
+        data: {
+          pregunta: datosNuevos.pregunta,
+          respuesta: datosNuevos.respuesta,
+          categoria_id: datosNuevos.categoria_id,
+          creado_por_id: 1,
+        },
+      });
+    });
+
+    it('falla explícitamente cuando no se configura el usuario creador', () => {
+      delete process.env.FAQ_CREATED_BY_ID;
+
+      expect(() => service.create(datosNuevos)).toThrow(
+        ServiceUnavailableException,
+      );
+      expect(tabla.create).not.toHaveBeenCalled();
     });
 
     it('responde 400 si la categoría, área o usuario no existe', async () => {

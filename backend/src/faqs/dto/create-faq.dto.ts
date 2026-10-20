@@ -40,7 +40,4 @@ export class CreateFaqDto {
   @IsBoolean({ message: 'publicada debe ser true o false' })
   publicada?: boolean;
 
-  @Min(1, { message: 'creado_por_id no es válido' })
-  @IsInt({ message: 'creado_por_id es obligatorio y debe ser un número entero' })
-  creado_por_id: number;
 }

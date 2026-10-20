@@ -109,6 +109,7 @@ Las credenciales y los parámetros de despliegue se entregan al backend como var
 | `ENROLAMIENTO_CONECTOR` | Conector de enrolamiento activo, por ejemplo `click_visitas`, o `ninguno` si el módulo está inactivo. |
 | `ENROLAMIENTO_URL`, `ENROLAMIENTO_USUARIO`, `ENROLAMIENTO_CLAVE` | Dirección y credenciales del sistema de enrolamiento, que existen solo en el servidor. |
 | `FOTOS_DIR` | Carpeta de almacenamiento temporal de las fotografías, a la que solo accede el backend. |
+| `FAQ_CREATED_BY_ID` | Id existente en `usuario` que el backend registra como autor de preguntas creadas desde el escritorio mientras el login institucional no esté integrado. |
 
 Los parámetros propios de la institución, como el nombre, el logotipo, los colores, los dominios de correo y los tiempos de operación, se guardan en la tabla `configuracion_sistema` y se cargan desde `config/` al inicializar la base de datos.
 
@@ -137,7 +138,7 @@ docker compose -f docker/docker-compose.yml exec backend npx prisma db seed
 Una vez levantado el sistema, la aplicación web del tótem queda disponible en `http://localhost:3000`. Para ejecutar la aplicación de escritorio de administración:
 
 ```bash
-cd frontend-desktop
+cd "Fase 2/Evidencias Proyecto/Evidencias de sistema/escritorio"
 npm install
 npm start
 ```

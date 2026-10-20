@@ -38,6 +38,7 @@ function sinIndefinidos(data: Partial<FaqFalsa>) {
 function crearPrismaEnMemoria() {
   let faqs: FaqFalsa[] = [];
   let siguienteId = 1;
+  const categorias = [{ id: 1, nombre: 'General', orden: 0 }];
 
   return {
     // Deja la "base" con datos iniciales antes de cada prueba
@@ -56,6 +57,10 @@ function crearPrismaEnMemoria() {
     },
     $connect: async () => {},
     $disconnect: async () => {},
+    categoria_faq: {
+      findMany: async () =>
+        categorias.map(({ id, nombre }) => ({ id, nombre })),
+    },
     pregunta_frecuente: {
       findMany: async ({ where }: { where?: Filtro }) =>
         faqs.filter((f) => cumple(f, where)).sort((a, b) => a.id - b.id),
@@ -103,10 +108,11 @@ describe('API OrientaSede (e2e)', () => {
     pregunta: '¿Nueva?',
     respuesta: 'Sí',
     categoria_id: 1,
-    creado_por_id: 1,
   };
+  const creadorIdAnterior = process.env.FAQ_CREATED_BY_ID;
 
   beforeAll(async () => {
+    process.env.FAQ_CREATED_BY_ID = '1';
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
@@ -129,6 +135,11 @@ describe('API OrientaSede (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+    if (creadorIdAnterior === undefined) {
+      delete process.env.FAQ_CREATED_BY_ID;
+    } else {
+      process.env.FAQ_CREATED_BY_ID = creadorIdAnterior;
+    }
   });
 
   it('GET / responde estado ok', () => {
@@ -143,6 +154,27 @@ describe('API OrientaSede (e2e)', () => {
       const res = await request(app.getHttpServer()).get('/faqs').expect(200);
       expect(res.body).toHaveLength(2);
       expect(res.body[0]).toMatchObject({ id: 1, pregunta: '¿Primera?' });
+    });
+
+    describe('Lectura (administración)', () => {
+      it('GET /faqs/admin devuelve preguntas publicadas y borradores', async () => {
+        const res = await request(app.getHttpServer())
+          .get('/faqs/admin')
+          .expect(200);
+        expect(res.body).toHaveLength(3);
+        expect(res.body[2]).toMatchObject({
+          id: 3,
+          pregunta: '¿Borrador?',
+          publicada: false,
+        });
+      });
+
+      it('GET /faqs/categorias devuelve categorías para el formulario', async () => {
+        const res = await request(app.getHttpServer())
+          .get('/faqs/categorias')
+          .expect(200);
+        expect(res.body).toEqual([{ id: 1, nombre: 'General' }]);
+      });
     });
 
     it('GET /faqs/:id devuelve una FAQ publicada', async () => {
@@ -191,10 +223,12 @@ describe('API OrientaSede (e2e)', () => {
     });
 
     it('POST /faqs responde 400 si falta un campo obligatorio', () => {
-      const { respuesta, ...sinRespuesta } = faqValida;
       return request(app.getHttpServer())
         .post('/faqs')
-        .send(sinRespuesta)
+        .send({
+          pregunta: faqValida.pregunta,
+          categoria_id: faqValida.categoria_id,
+        })
         .expect(400);
     });
 
@@ -206,15 +240,16 @@ describe('API OrientaSede (e2e)', () => {
       expect(res.body.message).toEqual([
         'La respuesta no puede estar vacía',
         'categoria_id es obligatorio y debe ser un número entero',
-        'creado_por_id es obligatorio y debe ser un número entero',
       ]);
     });
 
     it('POST /faqs responde 400 si falta la categoría', () => {
-      const { categoria_id, ...sinCategoria } = faqValida;
       return request(app.getHttpServer())
         .post('/faqs')
-        .send(sinCategoria)
+        .send({
+          pregunta: faqValida.pregunta,
+          respuesta: faqValida.respuesta,
+        })
         .expect(400);
     });
 
@@ -241,6 +276,17 @@ describe('API OrientaSede (e2e)', () => {
   });
 
   describe('Edición', () => {
+    it('PATCH /faqs/:id edita preguntas desde el escritorio', async () => {
+      const res = await request(app.getHttpServer())
+        .patch('/faqs/1')
+        .send({ pregunta: 'Editada desde escritorio' })
+        .expect(200);
+      expect(res.body).toMatchObject({
+        id: 1,
+        pregunta: 'Editada desde escritorio',
+      });
+    });
+
     it('PUT /faqs/:id edita solo los campos enviados', async () => {
       const res = await request(app.getHttpServer())
         .put('/faqs/1')

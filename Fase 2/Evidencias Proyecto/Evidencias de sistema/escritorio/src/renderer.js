@@ -1,6 +1,7 @@
 'use strict';
 
 const STORAGE_KEY = 'pui-desktop-demo-v1';
+const API_BASE_URL = 'http://localhost:3000';
 const DEMO_EMAIL = 'admin@demo.local';
 const DEMO_PASSWORD = 'demo1234';
 
@@ -50,12 +51,14 @@ const ENTITY_CONFIG = {
     emptyTitle: 'Todavía no hay preguntas', emptyText: 'Agrega una pregunta y su respuesta para el tótem.',
     fields: [
       { name: 'question', label: 'Pregunta', placeholder: 'Ej. ¿Dónde solicito un certificado?', required: true, full: true },
-      { name: 'category', label: 'Categoría', placeholder: 'Ej. Trámites', required: true },
-      { name: 'answer', label: 'Respuesta', placeholder: 'Describe los pasos que debe seguir el estudiante…', required: true, full: true, textarea: true }
+      { name: 'category_id', label: 'Categoría', required: true, full: true, select: true },
+      { name: 'answer', label: 'Respuesta', placeholder: 'Describe los pasos que debe seguir el estudiante…', required: true, full: true, textarea: true },
+      { name: 'published', label: 'Estado', required: true, select: true, options: [{ value: 'false', label: 'Borrador' }, { value: 'true', label: 'Publicada' }] }
     ],
     columns: [
       { label: 'Pregunta', key: 'question', primary: true, sub: 'category' },
-      { label: 'Respuesta', key: 'answer', truncate: 105 }
+      { label: 'Respuesta', key: 'answer', truncate: 105 },
+      { label: 'Estado', key: 'published' }
     ]
   }
 };
@@ -70,11 +73,7 @@ const DEMO_DATA = {
     { id: 'coord-1', name: 'Coordinación de Informática', career: 'Ingeniería en Informática', email: 'coordinacion.informatica@demo.local', phone: 'Anexo 210' },
     { id: 'coord-2', name: 'Coordinación de Administración', career: 'Administración de Empresas', email: 'coordinacion.administracion@demo.local', phone: 'Anexo 215' }
   ],
-  faqs: [
-    { id: 'faq-1', question: '¿Dónde puedo consultar por financiamiento?', category: 'Financiamiento', answer: 'Dirígete al área de Financiamiento o consulta los canales oficiales de atención de la sede.' },
-    { id: 'faq-2', question: '¿Cómo contacto a mi coordinador de carrera?', category: 'Vida académica', answer: 'Consulta el Directorio Académico del tótem para encontrar los datos de contacto de tu carrera.' },
-    { id: 'faq-3', question: '¿Dónde encuentro mis salas de clases?', category: 'Infraestructura', answer: 'Abre el mapa interactivo del tótem y busca el código o nombre de tu sala.' }
-  ]
+  faqs: []
 };
 
 let data = loadData();
@@ -82,6 +81,10 @@ let activeSection = 'overview';
 let searchQuery = '';
 let editingId = null;
 let toastTimer = null;
+let faqCategories = [];
+let faqLoading = false;
+let faqLoaded = false;
+let faqError = '';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -91,7 +94,9 @@ function loadData() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed && Array.isArray(parsed.rooms) && Array.isArray(parsed.coordinators) && Array.isArray(parsed.faqs)) return parsed;
+      if (parsed && Array.isArray(parsed.rooms) && Array.isArray(parsed.coordinators)) {
+        return { rooms: parsed.rooms, coordinators: parsed.coordinators, faqs: [] };
+      }
     }
   } catch (error) {
     console.warn('No fue posible leer los datos locales de demostración.', error);
@@ -101,12 +106,71 @@ function loadData() {
 
 function saveData() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      rooms: data.rooms,
+      coordinators: data.coordinators
+    }));
     return true;
   } catch (error) {
     console.error('No fue posible guardar los datos locales.', error);
     showToast('No se pudieron guardar los cambios en este equipo.', true);
     return false;
+  }
+}
+
+async function apiRequest(path, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers
+    }
+  });
+  const result = await response.json();
+  if (!response.ok) {
+    const message = Array.isArray(result.message) ? result.message.join('. ') : result.message;
+    throw new Error(message || `La API respondió con el estado ${response.status}.`);
+  }
+  return result;
+}
+
+async function loadFaqs() {
+  faqLoading = true;
+  faqError = '';
+  data.faqs = [];
+  $('#apiStatus').textContent = 'Conectando…';
+  if (activeSection === 'faqs') renderEntitySection('faqs');
+
+  try {
+    const [faqs, categories] = await Promise.all([
+      apiRequest('/faqs/admin'),
+      apiRequest('/faqs/categorias')
+    ]);
+    if (!Array.isArray(faqs) || !Array.isArray(categories)) {
+      throw new Error('La API devolvió datos de preguntas frecuentes con un formato inesperado.');
+    }
+    data.faqs = faqs.map(faq => ({
+      id: faq.id,
+      question: faq.pregunta,
+      answer: faq.respuesta,
+      categoryId: faq.categoria_id,
+      category: faq.categoria?.nombre || '',
+      published: faq.publicada
+    }));
+    faqCategories = categories;
+    faqLoaded = true;
+    $('#apiStatus').textContent = 'Conectada';
+    return true;
+  } catch (error) {
+    faqError = error instanceof Error ? error.message : 'No fue posible conectar con la API.';
+    console.error('No fue posible cargar las preguntas frecuentes desde la API.', error);
+    $('#apiStatus').textContent = 'Desconectada';
+    showToast(`No se pudieron cargar las preguntas: ${faqError}`, true);
+    return false;
+  } finally {
+    faqLoading = false;
+    if (activeSection === 'faqs') renderEntitySection('faqs');
+    else if (activeSection === 'overview') renderOverview();
   }
 }
 
@@ -148,6 +212,7 @@ function handleLogin(event) {
   $('#appScreen').hidden = false;
   activeSection = 'overview';
   renderApp();
+  if (!faqLoaded && !faqLoading) void loadFaqs();
 }
 
 function logout() {
@@ -163,6 +228,7 @@ function navigate(section) {
   activeSection = section;
   searchQuery = '';
   renderApp();
+  if (section === 'faqs' && !faqLoaded && !faqLoading) void loadFaqs();
 }
 
 function renderApp() {
@@ -195,13 +261,13 @@ function renderOverview() {
       <section class="panel"><div class="panel-header"><div><h2>Contenidos administrables</h2><p>Accede rápidamente a cada módulo del sistema.</p></div></div><div class="module-list">
         ${modules.map(module => `<button class="module-row" style="width:100%;background:transparent;border:0;text-align:left;cursor:pointer" data-action="navigate" data-section="${module.section}"><span class="module-icon">${module.icon}</span><span><strong>${module.title}</strong><small>${module.subtitle}</small></span><span class="row-count">${module.count}</span></button>`).join('')}
       </div></section>
-      <section class="panel"><div class="panel-header"><div><h2>Accesos rápidos</h2><p>Agrega información al panel local.</p></div></div><div class="quick-actions">
+      <section class="panel"><div class="panel-header"><div><h2>Accesos rápidos</h2><p>Administra la información desde sus módulos.</p></div></div><div class="quick-actions">
         ${quickAction('＋', 'Registrar una sala', 'Agregar ubicación del campus', 'rooms')}
         ${quickAction('＋', 'Añadir coordinador', 'Completar el directorio académico', 'coordinators')}
         ${quickAction('＋', 'Crear pregunta frecuente', 'Incorporar una respuesta útil', 'faqs')}
       </div></section>
     </div>
-    <div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Prototipo de demostración</strong>Los registros que ves son datos ficticios de ejemplo y se guardan localmente en este equipo. La conexión con las API del proyecto y la autenticación institucional deberán integrarse cuando estén disponibles sus contratos y endpoints.</div></div>
+    <div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Integración en desarrollo</strong>Las preguntas frecuentes se consultan y guardan en la API. Salas y coordinadores permanecen como datos locales de demostración; el acceso institucional todavía no está integrado.</div></div>
   `;
 }
 
@@ -219,11 +285,16 @@ function renderEntitySection(entity) {
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const filtered = list.filter(item => Object.values(item).some(value => String(value ?? '').toLowerCase().includes(normalizedQuery)));
   const headerActions = `<button class="button primary" data-action="create" data-entity="${entity}">＋ Agregar ${config.singular}</button>`;
+  const callout = entity === 'faqs'
+    ? `<div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Preguntas frecuentes conectadas a la API</strong>Los cambios se guardan en la base de datos y las preguntas publicadas aparecen en el tótem.</div></div>`
+    : `<div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Datos locales de demostración</strong>Los cambios se almacenan en este equipo. Aún no se envían a la API ni son visibles en el tótem.</div></div>`;
   $('#appContent').innerHTML = `
     <div class="page-heading"><div><p class="eyebrow">GESTIÓN DE CONTENIDO</p><h1>${config.title.charAt(0).toUpperCase()}${config.title.slice(1)}</h1><p>${config.description}</p></div><div class="heading-actions">${headerActions}</div></div>
     <div class="toolbar"><label class="search-box"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" value="${escapeHTML(searchQuery)}" placeholder="Buscar ${config.plural}…" aria-label="Buscar ${config.plural}"></label><span class="result-count">${filtered.length} de ${list.length} registros</span></div>
     <div class="table-wrap"><table class="data-table"><thead><tr>${config.columns.map(column => `<th>${column.label}</th>`).join('')}<th style="text-align:right">ACCIONES</th></tr></thead><tbody>${renderTableRows(entity, filtered, config)}</tbody></table></div>
-    <div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Datos locales de demostración</strong>Los cambios se almacenan en este equipo. Aún no se envían a la API ni son visibles en el tótem.</div></div>
+    ${faqLoading ? '<p class="muted" role="status">Cargando preguntas frecuentes…</p>' : ''}
+    ${faqError ? `<p class="form-error" role="alert">${escapeHTML(faqError)}</p>` : ''}
+    ${callout}
   `;
 }
 
@@ -243,6 +314,7 @@ function renderTableRows(entity, rows, config) {
       content = `<span title="${escapeHTML(item.answer)}">${content}</span>`;
     }
     if (column.key === 'floor') content = `<span class="tag">Piso ${escapeHTML(item.floor)}</span>`;
+    if (entity === 'faqs' && column.key === 'published') content = `<span class="tag">${item.published ? 'Publicada' : 'Borrador'}</span>`;
     return `<td>${content}</td>`;
   }).join('')}<td><div class="table-actions"><button class="icon-button" title="Editar" aria-label="Editar" data-action="edit" data-entity="${entity}" data-id="${escapeHTML(item.id)}">✎</button><button class="icon-button delete" title="Eliminar" aria-label="Eliminar" data-action="delete" data-entity="${entity}" data-id="${escapeHTML(item.id)}">×</button></div></td></tr>`).join('');
 }
@@ -272,20 +344,40 @@ function handleSearchInput(event) {
 function openModal(entity, id = null) {
   const config = ENTITY_CONFIG[entity];
   if (!config) return;
+  if (entity === 'faqs' && !faqLoaded) {
+    showToast(faqError || 'La conexión con la API todavía está cargando.', true);
+    return;
+  }
+  if (entity === 'faqs' && faqCategories.length === 0) {
+    showToast('La API no tiene categorías disponibles para asociar a una pregunta.', true);
+    return;
+  }
   editingId = id;
-  const existing = id ? data[entity].find(item => item.id === id) : null;
+  const existing = id ? data[entity].find(item => String(item.id) === String(id)) : null;
   if (id && !existing) return;
   const title = existing ? `Editar ${config.singular}` : `Agregar ${config.singular}`;
   const fields = config.fields.map(field => {
-    const value = existing?.[field.name] ?? '';
+    const value = field.name === 'category_id'
+      ? existing?.categoryId ?? ''
+      : field.name === 'published'
+        ? existing?.published ?? false
+        : existing?.[field.name] ?? '';
     const required = field.required ? 'required' : '';
     const placeholder = escapeHTML(field.placeholder || '');
-    const control = field.textarea
+    const options = field.name === 'category_id'
+      ? faqCategories.map(category => ({ value: String(category.id), label: category.nombre }))
+      : field.options;
+    const control = field.select
+      ? `<select class="field-control" id="field-${field.name}" name="${field.name}" ${required}><option value="">Selecciona una opción</option>${(options || []).map(option => `<option value="${escapeHTML(option.value)}" ${String(value) === String(option.value) ? 'selected' : ''}>${escapeHTML(option.label)}</option>`).join('')}</select>`
+      : field.textarea
       ? `<textarea class="field-control textarea" id="field-${field.name}" name="${field.name}" placeholder="${placeholder}" ${required}>${escapeHTML(value)}</textarea>`
       : `<input class="field-control" id="field-${field.name}" name="${field.name}" type="${field.type || 'text'}" value="${escapeHTML(value)}" placeholder="${placeholder}" ${required}>`;
     return `<div class="form-field ${field.full ? 'full' : ''}"><label for="field-${field.name}">${field.label}${field.required ? ' *' : ''}</label>${control}</div>`;
   }).join('');
-  $('#modalRoot').innerHTML = `<div class="modal-backdrop" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-header"><div><h2 id="modalTitle">${title}</h2><p>Completa los campos para actualizar los datos de demostración.</p></div><button type="button" class="modal-close" data-modal-action="close" aria-label="Cerrar ventana">×</button></div><form id="entityForm" class="modal-form" data-entity="${entity}"><div class="form-grid">${fields}</div><div class="modal-actions"><button type="button" class="button secondary" data-modal-action="close">Cancelar</button><button type="submit" class="button primary">${existing ? 'Guardar cambios' : 'Crear registro'}</button></div></form></section></div>`;
+  const description = entity === 'faqs'
+    ? 'Los cambios se guardarán en la base de datos.'
+    : 'Completa los campos para actualizar los datos de demostración.';
+  $('#modalRoot').innerHTML = `<div class="modal-backdrop" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-header"><div><h2 id="modalTitle">${title}</h2><p>${description}</p></div><button type="button" class="modal-close" data-modal-action="close" aria-label="Cerrar ventana">×</button></div><form id="entityForm" class="modal-form" data-entity="${entity}"><div class="form-grid">${fields}</div><div class="modal-actions"><button type="button" class="button secondary" data-modal-action="close">Cancelar</button><button type="submit" class="button primary">${existing ? 'Guardar cambios' : 'Crear registro'}</button></div></form></section></div>`;
   const firstInput = $('.field-control', $('#modalRoot'));
   if (firstInput) firstInput.focus();
 }
@@ -299,7 +391,7 @@ function handleModalClick(event) {
   if (event.target.classList.contains('modal-backdrop')) closeModal();
 }
 
-function handleModalSubmit(event) {
+async function handleModalSubmit(event) {
   if (event.target.id !== 'entityForm') return;
   event.preventDefault();
   const form = event.target;
@@ -321,6 +413,32 @@ function handleModalSubmit(event) {
     showToast('Ingresa un correo con un formato válido.', true);
     return;
   }
+  if (entity === 'faqs') {
+    const wasEditing = editingId !== null;
+    const payload = {
+      pregunta: record.question,
+      respuesta: record.answer,
+      categoria_id: Number(record.category_id),
+      publicada: record.published === 'true'
+    };
+    const submitButton = $('button[type="submit"]', form);
+    submitButton.disabled = true;
+    try {
+      await apiRequest(editingId ? `/faqs/${editingId}` : '/faqs', {
+        method: editingId ? 'PATCH' : 'POST',
+        body: JSON.stringify(payload)
+      });
+      closeModal();
+      faqLoaded = false;
+      const loaded = await loadFaqs();
+      if (loaded) showToast(wasEditing ? 'Pregunta frecuente actualizada en la base de datos.' : 'Pregunta frecuente creada en la base de datos.');
+    } catch (error) {
+      console.error('No fue posible guardar la pregunta frecuente en la API.', error);
+      showToast(error instanceof Error ? error.message : 'No fue posible guardar la pregunta frecuente.', true);
+      submitButton.disabled = false;
+    }
+    return;
+  }
   const existingIndex = data[entity].findIndex(item => item.id === editingId);
   const wasEditing = existingIndex >= 0;
   if (wasEditing) data[entity][existingIndex] = { ...data[entity][existingIndex], ...record };
@@ -333,14 +451,30 @@ function handleModalSubmit(event) {
 
 function deleteRecord(entity, id) {
   const config = ENTITY_CONFIG[entity];
-  const record = data[entity]?.find(item => item.id === id);
+  const record = data[entity]?.find(item => String(item.id) === String(id));
   if (!config || !record) return;
   const label = record.name || record.question || config.singular;
+  if (entity === 'faqs') {
+    if (window.confirm(`¿Seguro que quieres eliminar «${label}» de la base de datos?`)) void deleteFaq(id);
+    return;
+  }
   if (!window.confirm(`¿Seguro que quieres eliminar «${label}» de los datos de demostración?`)) return;
   data[entity] = data[entity].filter(item => item.id !== id);
   const saved = saveData();
   renderApp();
   if (saved) showToast('Registro eliminado de los datos locales.');
+}
+
+async function deleteFaq(id) {
+  try {
+    await apiRequest(`/faqs/${id}`, { method: 'DELETE' });
+    faqLoaded = false;
+    const loaded = await loadFaqs();
+    if (loaded) showToast('Pregunta frecuente eliminada de la base de datos.');
+  } catch (error) {
+    console.error('No fue posible eliminar la pregunta frecuente desde la API.', error);
+    showToast(error instanceof Error ? error.message : 'No fue posible eliminar la pregunta frecuente.', true);
+  }
 }
 
 function closeModal() {

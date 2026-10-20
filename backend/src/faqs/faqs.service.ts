@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -30,6 +31,27 @@ export class FaqsService {
     });
   }
 
+  findAllForAdmin() {
+    return this.prisma.pregunta_frecuente.findMany({
+      orderBy: { id: 'asc' },
+      select: {
+        id: true,
+        pregunta: true,
+        respuesta: true,
+        publicada: true,
+        categoria_id: true,
+        categoria: { select: { nombre: true } },
+      },
+    });
+  }
+
+  findCategories() {
+    return this.prisma.categoria_faq.findMany({
+      orderBy: [{ orden: 'asc' }, { nombre: 'asc' }],
+      select: { id: true, nombre: true },
+    });
+  }
+
   // LEER una publicada por id. Si no existe o no está publicada → 404
   async findOne(id: number) {
     const faq = await this.prisma.pregunta_frecuente.findFirst({
@@ -42,8 +64,26 @@ export class FaqsService {
 
   // CREAR una pregunta
   create(datos: CreateFaqDto) {
+    const creadorId = Number(process.env.FAQ_CREATED_BY_ID);
+    if (!Number.isInteger(creadorId) || creadorId < 1) {
+      throw new ServiceUnavailableException(
+        'Configura FAQ_CREATED_BY_ID con el id de un usuario existente antes de crear preguntas frecuentes',
+      );
+    }
+
     return this.guardar(() =>
-      this.prisma.pregunta_frecuente.create({ data: datos }),
+      this.prisma.pregunta_frecuente.create({
+        data: {
+          pregunta: datos.pregunta,
+          respuesta: datos.respuesta,
+          categoria_id: datos.categoria_id,
+          ...(datos.area_id !== undefined ? { area_id: datos.area_id } : {}),
+          ...(datos.publicada !== undefined
+            ? { publicada: datos.publicada }
+            : {}),
+          creado_por_id: creadorId,
+        },
+      }),
     );
   }
 
