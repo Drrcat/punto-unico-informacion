@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guía de trámites · Punto Único</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="barra-superior">
+    <div class="marca">
+      <span class="logo">PU</span>
+      <div>
+        <strong>Punto Único de Información</strong>
+        <small>Tótem de orientación estudiantil</small>
+      </div>
+    </div>
+    <a class="boton-volver" href="index.html">‹ Inicio</a>
+  </header>
+
+  <section class="titulo">
+    <h1>Guía de trámites</h1>
+    <p>Toca un trámite para ver los pasos y lo que necesitas</p>
+  </section>
+
+  <main class="contenedor">
+    <!-- Vista 1: lista de trámites con buscador -->
+    <section id="vista-lista">
+      <input type="search" id="buscador" class="buscador" placeholder="🔍  Busca un trámite (ej: certificado, convenio...)" autocomplete="off">
+      <p id="contador" class="contador" aria-live="polite"></p>
+      <div id="lista-tramites"></div>
+    </section>
+
+    <!-- Vista 2: detalle de un trámite (pasos y requisitos) -->
+    <section id="vista-detalle" hidden>
+      <button id="volver-lista" class="boton-secundario">‹ Ver todos los trámites</button>
+      <div id="detalle-tramite"></div>
+    </section>
+  </main>
+
+  <footer class="pie">
+    <p>Punto Único de Información · Tótem de orientación estudiantil</p>
+  </footer>
+
+  <script src="comun.js"></script>
+  <script src="tramites.js"></script>
+
+</body>
+</html>

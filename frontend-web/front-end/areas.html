@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¿Dónde debo ir? · Punto Único</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="barra-superior">
+    <div class="marca">
+      <span class="logo">PU</span>
+      <div>
+        <strong>Punto Único de Información</strong>
+        <small>Tótem de orientación estudiantil</small>
+      </div>
+    </div>
+    <a class="boton-volver" href="index.html">‹ Inicio</a>
+  </header>
+
+  <section class="titulo">
+    <h1>¿Dónde debo ir?</h1>
+    <p>Escribe lo que necesitas o toca un área para ver dónde está</p>
+  </section>
+
+  <main class="contenedor">
+    <input type="search" id="buscador" class="buscador" placeholder="🔍  ¿Qué necesitas? (ej: beca, pago, certificado...)" autocomplete="off">
+    <p id="contador" class="contador" aria-live="polite"></p>
+
+    <div id="lista-areas">
+      <!-- Aquí aparecerán las áreas automáticamente -->
+    </div>
+  </main>
+
+  <footer class="pie">
+    <p>Punto Único de Información · Tótem de orientación estudiantil</p>
+  </footer>
+
+  <script src="comun.js"></script>
+  <script src="areas.js"></script>
+
+</body>
+</html>

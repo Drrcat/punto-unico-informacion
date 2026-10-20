@@ -3,36 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tótem OrientaSede - Preguntas Frecuentes</title>
+  <title>Punto Único de Información</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
   <header class="barra-superior">
     <div class="marca">
-      <span class="logo">Duoc<span class="logo-uc">UC</span></span>
-      <span class="sede">Sede Puente Alto</span>
+      <span class="logo">PU</span>
+      <div>
+        <strong>Punto Único de Información</strong>
+        <small>Tótem de orientación estudiantil</small>
+      </div>
     </div>
   </header>
 
   <section class="titulo">
-    <h1>Preguntas Frecuentes</h1>
-    <p>Toca una pregunta para ver la respuesta</p>
+    <h1>¿En qué te podemos ayudar?</h1>
+    <p>Toca una opción para comenzar</p>
   </section>
 
-  <div class="contenedor">
-    <input type="text" id="buscador" placeholder="🔍  Busca tu pregunta (ej: TNE, arancel...)">
+  <main class="contenedor">
+    <nav class="menu" aria-label="Menú principal">
+      <a class="opcion-menu" href="faqs.html">
+        <span class="icono-menu" aria-hidden="true">?</span>
+        <div>
+          <strong>Preguntas frecuentes</strong>
+          <small>Respuestas rápidas a las dudas más comunes</small>
+        </div>
+        <span class="flecha" aria-hidden="true">›</span>
+      </a>
 
-    <main id="lista-faqs">
-      <!-- Aquí aparecerán las preguntas automáticamente -->
-    </main>
-  </div>
+      <a class="opcion-menu" href="areas.html">
+        <span class="icono-menu" aria-hidden="true">⌖</span>
+        <div>
+          <strong>¿Dónde debo ir?</strong>
+          <small>Encuentra el área que atiende tu consulta, su horario y contacto</small>
+        </div>
+        <span class="flecha" aria-hidden="true">›</span>
+      </a>
+
+      <a class="opcion-menu" href="tramites.html">
+        <span class="icono-menu" aria-hidden="true">☰</span>
+        <div>
+          <strong>Guía de trámites</strong>
+          <small>Paso a paso y documentos que necesitas</small>
+        </div>
+        <span class="flecha" aria-hidden="true">›</span>
+      </a>
+    </nav>
+  </main>
 
   <footer class="pie">
-    <p>OrientaSede · Tótem de Orientación Estudiantil</p>
+    <p>Punto Único de Información · Tótem de orientación estudiantil</p>
   </footer>
-
-  <script src="app.js"></script>
 
 </body>
 </html>
