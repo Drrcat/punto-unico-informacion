@@ -328,3 +328,28 @@ html, body { touch-action: pan-y; overscroll-behavior: none; }
   box-shadow: 0 5px 12px rgba(49, 93, 232, 0.2);
 }
 .aviso-boton:active { background: var(--azul-oscuro); }
+
+/* ===== Mapa y Salas ===== */
+/* Contenedor donde se inyecta el plano SVG del piso */
+#plano {
+  display: grid;
+  place-items: center;
+  min-height: 420px;
+  margin-bottom: 18px;
+  padding: 16px;
+  background: var(--blanco);
+  border: 1px solid var(--linea);
+  border-radius: 20px;
+  box-shadow: var(--sombra);
+  overflow: hidden;
+}
+#plano > .mensaje { width: 100%; border: none; }
+#plano svg { width: 100%; height: auto; }
+
+/* Sala resaltada en el plano (elemento del SVG cuyo id coincide con svg_element_id) */
+#plano .sala-activa {
+  fill: var(--azul) !important;
+  fill-opacity: 0.35;
+  stroke: var(--azul-oscuro) !important;
+  stroke-width: 3px;
+}

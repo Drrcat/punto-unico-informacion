@@ -10,6 +10,7 @@ Interfaz táctil del tótem de orientación estudiantil. HTML, CSS y JavaScript 
 | `faqs.html` | Preguntas frecuentes (con buscador) | `GET /faqs` |
 | `areas.html` | ¿Dónde debo ir? (directorio de áreas) | `GET /areas` |
 | `tramites.html` | Guía de trámites (pasos y requisitos) | `GET /tramites`, `GET /tramites/:id` |
+| `mapa.html` | Mapa y Salas: punto de integración del plano SVG (el mapa 2D es de Patricia) | Pendiente: `GET /salas`, `GET /pisos/:id/salas` |
 
 Archivos compartidos:
 
