@@ -286,3 +286,45 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 
 /* Nota pequeña al pie de una respuesta */
 .nota { color: var(--apagado); font-size: 15px; margin-top: 14px; }
+
+/* ===== Modo tótem ===== */
+/* Sin zoom por doble toque ni pellizco: la pantalla siempre se ve igual */
+html, body { touch-action: pan-y; overscroll-behavior: none; }
+
+/* Respuesta visual al tocar (en pantalla táctil no existe "hover") */
+.tarjeta-boton:active { background: var(--azul-palido); }
+
+/* Aviso "¿Sigues ahí?" antes de volver al inicio por inactividad */
+.aviso-inactividad {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(19, 29, 52, 0.55);
+  backdrop-filter: blur(4px);
+}
+.aviso-caja {
+  width: min(100%, 560px);
+  padding: 40px 32px;
+  border-radius: 24px;
+  background: var(--blanco);
+  box-shadow: 0 25px 90px rgba(10, 20, 45, 0.3);
+  text-align: center;
+}
+.aviso-caja h2 { font-size: 34px; letter-spacing: -0.03em; }
+.aviso-caja p { font-size: 20px; color: var(--apagado); margin: 12px 0 28px; }
+.aviso-caja b { color: var(--azul); }
+.aviso-boton {
+  width: 100%;
+  min-height: 72px;
+  border: none;
+  border-radius: 16px;
+  background: var(--azul);
+  color: var(--blanco);
+  font-size: 22px;
+  font-weight: 750;
+  box-shadow: 0 5px 12px rgba(49, 93, 232, 0.2);
+}
+.aviso-boton:active { background: var(--azul-oscuro); }

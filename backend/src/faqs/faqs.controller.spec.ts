@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FaqsController } from './faqs.controller';
 import { FaqsService } from './faqs.service';
+import { CreateFaqDto } from './dto/create-faq.dto';
 
 // Pruebas unitarias del controlador: verifican que cada ruta llame al
 // método correcto del servicio con los parámetros correctos.
@@ -38,12 +39,17 @@ describe('FaqsController', () => {
   });
 
   it('POST /faqs llama a create con el body', async () => {
-    const datos = { pregunta: 'P', respuesta: 'R' };
+    const datos: CreateFaqDto = {
+      pregunta: 'P',
+      respuesta: 'R',
+      categoria_id: 1,
+      creado_por_id: 1,
+    };
     await controller.create(datos);
     expect(serviceMock.create).toHaveBeenCalledWith(datos);
   });
 
-  it('PATCH /faqs/:id llama a update con id y body', async () => {
+  it('PUT /faqs/:id llama a update con id y body', async () => {
     await controller.update(1, { pregunta: 'Editada' });
     expect(serviceMock.update).toHaveBeenCalledWith(1, { pregunta: 'Editada' });
   });
