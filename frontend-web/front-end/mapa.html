@@ -6,44 +6,16 @@
   <title>Mapa y Salas · Punto Único</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="pagina-mapa">
 
-  <header class="barra-superior">
-    <div class="marca">
-      <span class="logo">PU</span>
-      <div>
-        <strong>Punto Único de Información</strong>
-        <small>Tótem de orientación estudiantil</small>
-      </div>
-    </div>
-    <a class="boton-volver" href="index.html">‹ Inicio</a>
+  <!-- Barra delgada para volver al menú; el mapa trae su propio encabezado -->
+  <header class="barra-superior barra-mapa">
+    <a class="boton-volver" href="index.html">← Volver al inicio</a>
   </header>
 
-  <section class="titulo">
-    <h1>Mapa y Salas</h1>
-    <p>Busca una sala para verla en el plano de la sede</p>
-  </section>
-
-  <main class="contenedor">
-    <input type="search" id="buscador" class="buscador" placeholder="🔍  Busca una sala (ej: A-101, laboratorio...)" autocomplete="off">
-    <p id="contador" class="contador" aria-live="polite"></p>
-
-    <!-- Aquí se inyectará el plano SVG del piso (parte de Patricia) -->
-    <div id="plano">
-      <p class="mensaje">El mapa de la sede se mostrará aquí.</p>
-    </div>
-
-    <!-- Datos de la sala seleccionada -->
-    <div id="detalle-sala"></div>
-  </main>
-
-  <footer class="pie">
-    <p>Punto Único de Información · Tótem de orientación estudiantil</p>
-  </footer>
-
-  <script src="comun.js"></script>
-  <script src="mapa.js"></script>
-  <script src="totem.js"></script>
+  <!-- Mapa interactivo de Patricia, usado tal cual. ?marco=0 oculta su marco y ocupa todo el espacio.
+       No se carga totem.js aquí: el mapa maneja su propia inactividad dentro del iframe. -->
+  <iframe class="mapa-marco" src="OrientaSede_Mapa_Piso2y3_v2.html?marco=0" title="Mapa de la sede"></iframe>
 
 </body>
 </html>
