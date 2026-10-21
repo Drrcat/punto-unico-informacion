@@ -8,7 +8,7 @@ const DEMO_PASSWORD = 'demo1234';
 const SECTION_META = {
   overview: { title: 'Resumen', breadcrumb: 'PANEL ADMINISTRATIVO' },
   rooms: { title: 'Gestión de salas', breadcrumb: 'CONTENIDOS DEL TÓTEM' },
-  coordinators: { title: 'Coordinadores', breadcrumb: 'DIRECTORIO ACADÉMICO' },
+  areas: { title: 'Áreas', breadcrumb: 'DIRECTORIO INSTITUCIONAL' },
   faqs: { title: 'Preguntas frecuentes', breadcrumb: 'CENTRO DE AYUDA' }
 };
 
@@ -29,20 +29,22 @@ const ENTITY_CONFIG = {
       { label: 'Ubicación', key: 'location' }
     ]
   },
-  coordinators: {
-    singular: 'coordinador', plural: 'coordinadores', title: 'coordinadores',
-    description: 'Administra el directorio de coordinadores de carrera y sus medios de contacto.',
-    emptyTitle: 'Todavía no hay coordinadores', emptyText: 'Agrega un contacto para completar el directorio académico.',
+  areas: {
+    singular: 'área', plural: 'áreas', title: 'áreas',
+    description: 'Administra las áreas a las que el tótem dirige a la comunidad y sus medios de contacto.',
+    emptyTitle: 'Todavía no hay áreas', emptyText: 'Agrega un área para orientar a las personas dentro de la sede.',
     fields: [
-      { name: 'name', label: 'Nombre completo', placeholder: 'Ej. Camila González', required: true, full: true },
-      { name: 'career', label: 'Carrera', placeholder: 'Ej. Ingeniería en Informática', required: true, full: true },
-      { name: 'email', label: 'Correo institucional', placeholder: 'nombre@institucion.edu', type: 'email', required: true },
-      { name: 'phone', label: 'Teléfono o anexo', placeholder: 'Ej. 225555555', required: false }
+      { name: 'name', label: 'Nombre del área', placeholder: 'Ej. Financiamiento', required: true, full: true },
+      { name: 'description', label: 'Descripción', placeholder: 'Ej. Becas, créditos y pagos de aranceles', required: true, full: true },
+      { name: 'location', label: 'Ubicación (espacio del mapa)', select: true, emptyOption: 'Seleccionar espacio' },
+      { name: 'phone', label: 'Anexo', placeholder: 'Ej. 210' },
+      { name: 'email', label: 'Correo de contacto', placeholder: 'Ej. financiamiento@ejemplo.cl', type: 'email', required: true, full: true },
+      { name: 'schedule', label: 'Horario de atención', placeholder: 'Ej. Lunes a viernes, 9:00 a 17:00', full: true }
     ],
     columns: [
-      { label: 'Coordinador', key: 'name', primary: true, sub: 'career' },
-      { label: 'Correo', key: 'email' },
-      { label: 'Teléfono / anexo', key: 'phone' }
+      { label: 'Área y ubicación', key: 'name', primary: true, sub: 'location' },
+      { label: 'Contacto', key: 'email', primary: true, sub: 'phone', subPrefix: 'Anexo ' },
+      { label: 'Horario de atención', key: 'schedule' }
     ]
   },
   faqs: {
@@ -69,12 +71,21 @@ const DEMO_DATA = {
     { id: 'room-2', name: 'Sala de clases 204', code: 'S-204', floor: '2', location: 'Edificio principal, pasillo central' },
     { id: 'room-3', name: 'Biblioteca', code: 'BIB-01', floor: '1', location: 'Acceso central, junto al patio' }
   ],
-  coordinators: [
-    { id: 'coord-1', name: 'Coordinación de Informática', career: 'Ingeniería en Informática', email: 'coordinacion.informatica@demo.local', phone: 'Anexo 210' },
-    { id: 'coord-2', name: 'Coordinación de Administración', career: 'Administración de Empresas', email: 'coordinacion.administracion@demo.local', phone: 'Anexo 215' }
+  areas: [
+    { id: 'area-1', name: 'Financiamiento', description: 'Becas, créditos y pagos de aranceles', location: 'Piso 1, oficina 105', email: 'financiamiento@ejemplo.cl', phone: '210', schedule: 'Lunes a viernes, 9:00 a 17:00' },
+    { id: 'area-2', name: 'Servicios Digitales', description: 'Soporte y servicios digitales', location: 'Piso 2, oficina 210', email: 'soporte@ejemplo.cl', phone: '215', schedule: 'Lunes a viernes, 8:30 a 18:00' },
+    { id: 'area-3', name: 'CASE', description: 'Centro de apoyo y servicios estudiantiles', location: 'Piso 1, oficina 112', email: 'case@ejemplo.cl', phone: '220', schedule: 'Lunes a viernes, 9:00 a 17:00' },
+    { id: 'area-4', name: 'Dirección de Carrera', description: 'Orientación académica y de carrera', location: 'Piso 3, oficina 301', email: 'direccion.carrera@ejemplo.cl', phone: '230', schedule: 'Lunes a jueves, 10:00 a 16:00' }
   ],
   faqs: []
 };
+
+const DEMO_AREA_SPACES = [
+  { value: 'Piso 1, oficina 105', label: 'Piso 1, oficina 105' },
+  { value: 'Piso 2, oficina 210', label: 'Piso 2, oficina 210' },
+  { value: 'Piso 1, oficina 112', label: 'Piso 1, oficina 112' },
+  { value: 'Piso 3, oficina 301', label: 'Piso 3, oficina 301' }
+];
 
 let data = loadData();
 let activeSection = 'overview';
@@ -94,8 +105,12 @@ function loadData() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed && Array.isArray(parsed.rooms) && Array.isArray(parsed.coordinators)) {
-        return { rooms: parsed.rooms, coordinators: parsed.coordinators, faqs: [] };
+      if (parsed && Array.isArray(parsed.rooms)) {
+        return {
+          rooms: parsed.rooms,
+          areas: Array.isArray(parsed.areas) ? parsed.areas : JSON.parse(JSON.stringify(DEMO_DATA.areas)),
+          faqs: []
+        };
       }
     }
   } catch (error) {
@@ -108,7 +123,7 @@ function saveData() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       rooms: data.rooms,
-      coordinators: data.coordinators
+      areas: data.areas
     }));
     return true;
   } catch (error) {
@@ -178,6 +193,10 @@ function escapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 }
 
+function getAreaLocation(area) {
+  return area.location || '';
+}
+
 function makeId(prefix) {
   if (window.crypto && typeof window.crypto.randomUUID === 'function') return `${prefix}-${window.crypto.randomUUID()}`;
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -237,7 +256,7 @@ function renderApp() {
   $('#breadcrumb').textContent = meta.breadcrumb;
   $$('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.section === activeSection));
   $('#roomNavCount').textContent = data.rooms.length;
-  $('#coordinatorNavCount').textContent = data.coordinators.length;
+  $('#areaNavCount').textContent = data.areas.length;
   $('#faqNavCount').textContent = data.faqs.length;
   if (activeSection === 'overview') renderOverview();
   else renderEntitySection(activeSection);
@@ -246,14 +265,14 @@ function renderApp() {
 function renderOverview() {
   const modules = [
     { section: 'rooms', icon: '⌂', title: 'Gestión de salas', subtitle: 'Espacios y ubicaciones del campus', count: data.rooms.length },
-    { section: 'coordinators', icon: '♙', title: 'Coordinadores', subtitle: 'Directorio académico y contacto', count: data.coordinators.length },
+    { section: 'areas', icon: '⌖', title: 'Áreas', subtitle: 'Directorio y ubicación de atención', count: data.areas.length },
     { section: 'faqs', icon: '?', title: 'Preguntas frecuentes', subtitle: 'Respuestas para consultas habituales', count: data.faqs.length }
   ];
   $('#appContent').innerHTML = `
     <div class="page-heading"><div><p class="eyebrow">VISTA GENERAL</p><h1>¡Bienvenido al panel!</h1><p>Administra los contenidos que verá la comunidad estudiantil en el tótem.</p></div><div class="heading-actions"><button class="button primary" data-action="create" data-entity="rooms">＋ Agregar sala</button></div></div>
     <div class="kpi-grid">
       ${kpiCard('Salas registradas', data.rooms.length, '⌂', 'Espacios del campus')}
-      ${kpiCard('Coordinadores', data.coordinators.length, '♙', 'Contactos académicos')}
+      ${kpiCard('Áreas', data.areas.length, '⌖', 'Puntos de atención')}
       ${kpiCard('Preguntas frecuentes', data.faqs.length, '?', 'Respuestas disponibles')}
       ${kpiCard('Módulos', '3', '▦', 'Secciones administrables')}
     </div>
@@ -263,11 +282,11 @@ function renderOverview() {
       </div></section>
       <section class="panel"><div class="panel-header"><div><h2>Accesos rápidos</h2><p>Administra la información desde sus módulos.</p></div></div><div class="quick-actions">
         ${quickAction('＋', 'Registrar una sala', 'Agregar ubicación del campus', 'rooms')}
-        ${quickAction('＋', 'Añadir coordinador', 'Completar el directorio académico', 'coordinators')}
+        ${quickAction('＋', 'Agregar área', 'Indicar dónde recibir orientación', 'areas')}
         ${quickAction('＋', 'Crear pregunta frecuente', 'Incorporar una respuesta útil', 'faqs')}
       </div></section>
     </div>
-    <div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Integración en desarrollo</strong>Las preguntas frecuentes se consultan y guardan en la API. Salas y coordinadores permanecen como datos locales de demostración; el acceso institucional todavía no está integrado.</div></div>
+    <div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Integración en desarrollo</strong>Las preguntas frecuentes se consultan y guardan en la API. Salas y áreas permanecen como datos locales de demostración; el acceso institucional todavía no está integrado.</div></div>
   `;
 }
 
@@ -283,11 +302,16 @@ function renderEntitySection(entity) {
   const config = ENTITY_CONFIG[entity];
   const list = data[entity];
   const normalizedQuery = searchQuery.trim().toLowerCase();
-  const filtered = list.filter(item => Object.values(item).some(value => String(value ?? '').toLowerCase().includes(normalizedQuery)));
+  const filtered = list.filter(item => [
+    ...Object.values(item),
+    ...(entity === 'areas' ? [getAreaLocation(item)] : [])
+  ].some(value => String(value ?? '').toLowerCase().includes(normalizedQuery)));
   const headerActions = `<button class="button primary" data-action="create" data-entity="${entity}">＋ Agregar ${config.singular}</button>`;
   const callout = entity === 'faqs'
     ? `<div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Preguntas frecuentes conectadas a la API</strong>Los cambios se guardan en la base de datos y las preguntas publicadas aparecen en el tótem.</div></div>`
-    : `<div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Datos locales de demostración</strong>Los cambios se almacenan en este equipo. Aún no se envían a la API ni son visibles en el tótem.</div></div>`;
+    : entity === 'areas'
+      ? `<div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Áreas en modo de demostración</strong>Las ubicaciones son ejemplos locales del mockup. Los cambios se guardan en este equipo, pero aún no se envían a la API ni son visibles en el tótem.</div></div>`
+      : `<div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Datos locales de demostración</strong>Los cambios se almacenan en este equipo. Aún no se envían a la API ni son visibles en el tótem.</div></div>`;
   $('#appContent').innerHTML = `
     <div class="page-heading"><div><p class="eyebrow">GESTIÓN DE CONTENIDO</p><h1>${config.title.charAt(0).toUpperCase()}${config.title.slice(1)}</h1><p>${config.description}</p></div><div class="heading-actions">${headerActions}</div></div>
     <div class="toolbar"><label class="search-box"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" value="${escapeHTML(searchQuery)}" placeholder="Buscar ${config.plural}…" aria-label="Buscar ${config.plural}"></label><span class="result-count">${filtered.length} de ${list.length} registros</span></div>
@@ -304,7 +328,10 @@ function renderTableRows(entity, rows, config) {
     return `<tr><td class="empty-state" colspan="${config.columns.length + 1}"><strong>${searching ? 'No se encontraron resultados' : config.emptyTitle}</strong><span>${searching ? 'Prueba con otro término de búsqueda.' : config.emptyText}</span></td></tr>`;
   }
   return rows.map(item => `<tr>${config.columns.map(column => {
-    let content = escapeHTML(item[column.key] || '—');
+    const value = entity === 'areas' && column.key === 'location'
+      ? getAreaLocation(item)
+      : item[column.key];
+    let content = escapeHTML(value || '—');
     if (column.truncate && String(item[column.key] || '').length > column.truncate) content = `${escapeHTML(String(item[column.key]).slice(0, column.truncate))}…`;
     if (column.primary) {
       const subValue = column.sub ? item[column.sub] : '';
@@ -366,9 +393,11 @@ function openModal(entity, id = null) {
     const placeholder = escapeHTML(field.placeholder || '');
     const options = field.name === 'category_id'
       ? faqCategories.map(category => ({ value: String(category.id), label: category.nombre }))
+      : field.name === 'location'
+        ? DEMO_AREA_SPACES
       : field.options;
     const control = field.select
-      ? `<select class="field-control" id="field-${field.name}" name="${field.name}" ${required}><option value="">Selecciona una opción</option>${(options || []).map(option => `<option value="${escapeHTML(option.value)}" ${String(value) === String(option.value) ? 'selected' : ''}>${escapeHTML(option.label)}</option>`).join('')}</select>`
+      ? `<select class="field-control" id="field-${field.name}" name="${field.name}" ${required}><option value="">${escapeHTML(field.emptyOption || 'Selecciona una opción')}</option>${(options || []).map(option => `<option value="${escapeHTML(option.value)}" ${String(value) === String(option.value) ? 'selected' : ''}>${escapeHTML(option.label)}</option>`).join('')}</select>`
       : field.textarea
       ? `<textarea class="field-control textarea" id="field-${field.name}" name="${field.name}" placeholder="${placeholder}" ${required}>${escapeHTML(value)}</textarea>`
       : `<input class="field-control" id="field-${field.name}" name="${field.name}" type="${field.type || 'text'}" value="${escapeHTML(value)}" placeholder="${placeholder}" ${required}>`;
@@ -376,6 +405,8 @@ function openModal(entity, id = null) {
   }).join('');
   const description = entity === 'faqs'
     ? 'Los cambios se guardarán en la base de datos.'
+    : entity === 'areas'
+      ? 'Completa los campos para actualizar el directorio de áreas del tótem.'
     : 'Completa los campos para actualizar los datos de demostración.';
   $('#modalRoot').innerHTML = `<div class="modal-backdrop" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-header"><div><h2 id="modalTitle">${title}</h2><p>${description}</p></div><button type="button" class="modal-close" data-modal-action="close" aria-label="Cerrar ventana">×</button></div><form id="entityForm" class="modal-form" data-entity="${entity}"><div class="form-grid">${fields}</div><div class="modal-actions"><button type="button" class="button secondary" data-modal-action="close">Cancelar</button><button type="submit" class="button primary">${existing ? 'Guardar cambios' : 'Crear registro'}</button></div></form></section></div>`;
   const firstInput = $('.field-control', $('#modalRoot'));
@@ -408,9 +439,16 @@ async function handleModalSubmit(event) {
       return;
     }
   }
-  if (entity === 'coordinators' && record.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email)) {
+  if (entity === 'areas' && record.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email)) {
     $('#field-email', form).focus();
     showToast('Ingresa un correo con un formato válido.', true);
+    return;
+  }
+  if (entity === 'areas' && data.areas.some(area =>
+    area.name.trim().toLowerCase() === record.name.toLowerCase() && String(area.id) !== String(editingId)
+  )) {
+    $('#field-name', form).focus();
+    showToast('Ya existe un área con ese nombre.', true);
     return;
   }
   if (entity === 'faqs') {

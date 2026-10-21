@@ -5,9 +5,10 @@ Aplicación administrativa de Electron + HTML + CSS + JavaScript.
 ## Qué incluye
 
 - Inicio de sesión de demostración.
-- Navegación entre Resumen, Salas, Coordinadores y Preguntas frecuentes.
+- Navegación entre Resumen, Salas, Áreas y Preguntas frecuentes.
 - CRUD de preguntas frecuentes conectado a la API y la base de datos PostgreSQL.
-- CRUD local de salas y coordinadores, persistido en `localStorage`.
+- CRUD local de salas y áreas, persistido en `localStorage`.
+- Listado y ubicaciones de áreas basados en los ejemplos locales del mockup, sin depender de la API de salas.
 - Búsqueda en listados y validaciones básicas de formularios.
 - `contextIsolation`, `nodeIntegration: false`, `sandbox` y un `preload.js` mínimo.
 
@@ -36,4 +37,4 @@ Este acceso es una simulación y no se conecta al sistema de usuarios. `FAQ_CREA
 
 La sección Preguntas frecuentes consulta `GET /faqs/admin` y `GET /faqs/categorias`. Crear, editar y eliminar usan `POST /faqs`, `PATCH /faqs/:id` y `DELETE /faqs/:id`. Los borradores y las preguntas publicadas se guardan en la base de datos; el endpoint público `GET /faqs` continúa devolviendo solo las publicadas.
 
-Salas y coordinadores siguen siendo datos locales de demostración.
+Salas y áreas siguen siendo datos locales de demostración. Las áreas incluyen los ejemplos de Financiamiento, Servicios Digitales, CASE y Dirección de Carrera; las ubicaciones de muestra no dependen de la API de salas. Estos cambios no se envían a la API ni aparecen en el tótem.
