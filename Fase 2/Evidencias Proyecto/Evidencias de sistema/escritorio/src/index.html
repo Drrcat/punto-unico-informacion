@@ -6,6 +6,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' http://localhost:3000; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>Punto Único de Información · Administración</title>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./enrollments.css">
   <script src="./renderer.js" defer></script>
 </head>
 <body>
@@ -54,6 +55,7 @@
         <button class="nav-item" data-section="rooms"><span class="nav-icon">⌂</span>Salas <span class="nav-count" id="roomNavCount">0</span></button>
         <button class="nav-item" data-section="areas"><span class="nav-icon">⌖</span>Áreas <span class="nav-count" id="areaNavCount">0</span></button>
         <button class="nav-item" data-section="faqs"><span class="nav-icon">?</span>Preguntas frecuentes <span class="nav-count" id="faqNavCount">0</span></button>
+        <button class="nav-item" data-section="enrollments" aria-label="Solicitudes de enrolamiento"><span class="nav-icon">♧</span>Solicitudes de enrolamiento <span class="nav-count" id="enrollmentNavCount">12</span></button>
       </nav>
       <div class="sidebar-bottom">
         <div class="environment-card"><span class="status-dot"></span><div><strong>API de preguntas</strong><small id="apiStatus">Sin conectar</small></div></div>

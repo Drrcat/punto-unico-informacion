@@ -5,7 +5,8 @@ Aplicación administrativa de Electron + HTML + CSS + JavaScript.
 ## Qué incluye
 
 - Inicio de sesión de demostración.
-- Navegación entre Resumen, Salas, Áreas y Preguntas frecuentes.
+- Navegación entre Resumen, Salas, Áreas, Preguntas frecuentes y Solicitudes de enrolamiento.
+- Seguimiento de enrolamientos de solo lectura con filtros por estado y fecha, selección de solicitud y detalle de validaciones.
 - CRUD de preguntas frecuentes conectado a la API y la base de datos PostgreSQL.
 - CRUD local de salas y áreas, persistido en `localStorage`.
 - Listado y ubicaciones de áreas basados en los ejemplos locales del mockup, sin depender de la API de salas.
@@ -38,3 +39,5 @@ Este acceso es una simulación y no se conecta al sistema de usuarios. `FAQ_CREA
 La sección Preguntas frecuentes consulta `GET /faqs/admin` y `GET /faqs/categorias`. Crear, editar y eliminar usan `POST /faqs`, `PATCH /faqs/:id` y `DELETE /faqs/:id`. Los borradores y las preguntas publicadas se guardan en la base de datos; el endpoint público `GET /faqs` continúa devolviendo solo las publicadas.
 
 Salas y áreas siguen siendo datos locales de demostración. Las áreas incluyen los ejemplos de Financiamiento, Servicios Digitales, CASE y Dirección de Carrera; las ubicaciones de muestra no dependen de la API de salas. Estos cambios no se envían a la API ni aparecen en el tótem.
+
+El seguimiento de solicitudes de enrolamiento también usa registros locales de demostración mientras no esté integrado el endpoint correspondiente. La sección es de solo lectura y no muestra fotografías.
