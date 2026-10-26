@@ -1,0 +1,13 @@
+{
+  "name": "punto-unico-escritorio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Panel administrativo de escritorio para el proyecto Punto Único de Información",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^44.0.0"
+  }
+}
