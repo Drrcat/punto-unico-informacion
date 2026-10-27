@@ -1,0 +1,562 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================================
+// OrientaSede - Modelo de datos (PostgreSQL)
+// Plataforma genérica: una instalación por institución. Lo propio de cada
+// institución vive en configuracion_sistema y en los datos (planos, áreas,
+// preguntas frecuentes, trámites), no en el esquema.
+// Dominios: 1 Usuarios/Acceso, 2 Académico, 3 Infraestructura,
+//           4 Procesos/Trámites, 5 Sistema/Tótem
+// =====================================================================
+
+enum EstadoAutenticacion {
+  PENDIENTE
+  VERIFICADA
+  EXPIRADA
+  RECHAZADA
+}
+
+enum EstadoEnrolamiento {
+  INICIADO
+  FOTO_PENDIENTE
+  COMPLETADO
+  FALLIDO
+  CANCELADO
+}
+
+enum TipoConsulta {
+  SALA
+  DIRECTORIO
+  FAQ
+  TRAMITE
+}
+
+enum ServicioExterno {
+  GOOGLE_VISION
+  CORREO
+  ENROLAMIENTO
+}
+
+// ---------------------------------------------------------------------
+// DOMINIO 1: USUARIOS / ACCESO
+// ---------------------------------------------------------------------
+
+/// Persona con correo institucional (estudiante, docente o funcionario). Solo los administradores tienen contraseña.
+model usuario {
+  id               Int      @id @default(autoincrement())
+  /// Correo institucional. Su dominio debe estar entre los aceptados por la institución.
+  correo           String   @unique @db.VarChar(150)
+  nombres          String   @db.VarChar(100)
+  apellidos        String   @db.VarChar(100)
+  /// Hash bcrypt de la contraseña. Nulo para quienes no administran el sistema.
+  clave_hash       String?  @db.VarChar(100)
+  /// Intentos fallidos consecutivos de inicio de sesión; vuelve a 0 al ingresar.
+  intentos_fallidos Int     @default(0) @db.SmallInt
+  /// Hasta cuándo permanece bloqueado el inicio de sesión tras demasiados intentos fallidos.
+  bloqueado_hasta  DateTime?
+  activo           Boolean  @default(true)
+  creado_en        DateTime @default(now())
+  actualizado_en   DateTime @updatedAt
+
+  usuario_rol_rel     usuario_rol[]
+  sesion_admin_rel    sesion_admin[]
+  estudiante_rel      estudiante?
+  intento_rel         intento_autenticacion[]
+  enrolamiento_rel    enrolamiento[]
+  faq_creadas         pregunta_frecuente[]
+  avisos_creados      aviso[]
+  auditoria_rel       registro_auditoria[]
+}
+
+/// Perfil funcional del sistema (p. ej. Administrador, Editor, Solo lectura).
+model rol {
+  id           Int     @id @default(autoincrement())
+  nombre       String  @unique @db.VarChar(50)
+  descripcion  String? @db.VarChar(255)
+
+  usuario_rol_rel usuario_rol[]
+  rol_permiso_rel rol_permiso[]
+}
+
+/// Acción concreta que puede autorizarse (p. ej. sala.editar, faq.publicar).
+model permiso {
+  id           Int     @id @default(autoincrement())
+  codigo       String  @unique @db.VarChar(80)
+  descripcion  String? @db.VarChar(255)
+
+  rol_permiso_rel rol_permiso[]
+}
+
+/// Relación N:M entre roles y permisos.
+model rol_permiso {
+  rol_id      Int
+  permiso_id  Int
+
+  rol      rol     @relation(fields: [rol_id], references: [id], onDelete: Cascade)
+  permiso  permiso @relation(fields: [permiso_id], references: [id], onDelete: Cascade)
+
+  @@id([rol_id, permiso_id])
+}
+
+/// Relación N:M entre usuarios y roles.
+model usuario_rol {
+  usuario_id   Int
+  rol_id       Int
+  asignado_en  DateTime @default(now())
+
+  usuario  usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  rol      rol     @relation(fields: [rol_id], references: [id], onDelete: Restrict)
+
+  @@id([usuario_id, rol_id])
+}
+
+/// Sesión iniciada en la aplicación de escritorio administrativa (se puede revocar).
+model sesion_admin {
+  id           Int       @id @default(autoincrement())
+  usuario_id   Int
+  /// Hash del token de sesión (nunca el token en claro).
+  token_hash   String    @unique @db.VarChar(128)
+  creada_en    DateTime  @default(now())
+  expira_en    DateTime
+  revocada_en  DateTime?
+
+  usuario usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@index([usuario_id])
+}
+
+// ---------------------------------------------------------------------
+// DOMINIO 2: ACADÉMICO
+// ---------------------------------------------------------------------
+
+/// Escuela o unidad académica que agrupa carreras.
+model escuela {
+  id      Int    @id @default(autoincrement())
+  nombre  String @unique @db.VarChar(120)
+
+  carrera_rel carrera[]
+}
+
+/// Carrera o programa que se imparte en la institución.
+model carrera {
+  id         Int     @id @default(autoincrement())
+  escuela_id Int
+  /// Área institucional que atiende a los estudiantes de la carrera (nula si aún no se asigna).
+  area_id    Int?
+  codigo     String  @unique @db.VarChar(20)
+  nombre     String  @db.VarChar(150)
+  activa     Boolean @default(true)
+
+  escuela escuela             @relation(fields: [escuela_id], references: [id], onDelete: Restrict)
+  area    area_institucional? @relation(fields: [area_id], references: [id], onDelete: SetNull)
+
+  estudiante_rel estudiante[]
+
+  @@index([escuela_id])
+  @@index([area_id])
+}
+
+/// Datos académicos de un usuario que es estudiante (extensión 1:1 de usuario).
+model estudiante {
+  id            Int @id @default(autoincrement())
+  usuario_id    Int @unique
+  carrera_id    Int
+  anio_ingreso  Int @db.SmallInt
+
+  usuario usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  carrera carrera @relation(fields: [carrera_id], references: [id], onDelete: Restrict)
+
+  @@index([carrera_id])
+}
+
+// ---------------------------------------------------------------------
+// DOMINIO 3: INFRAESTRUCTURA
+// ---------------------------------------------------------------------
+
+/// Sede o campus.
+model sede {
+  id         Int     @id @default(autoincrement())
+  nombre     String  @unique @db.VarChar(100)
+  direccion  String? @db.VarChar(200)
+
+  edificio_rel edificio[]
+  totem_rel    totem[]
+}
+
+/// Edificio o torre dentro de la sede.
+model edificio {
+  id       Int    @id @default(autoincrement())
+  sede_id  Int
+  nombre   String @db.VarChar(80)
+
+  sede sede @relation(fields: [sede_id], references: [id], onDelete: Cascade)
+
+  piso_rel piso[]
+
+  @@unique([sede_id, nombre])
+}
+
+/// Piso de un edificio, con referencia a su plano SVG.
+model piso {
+  id               Int     @id @default(autoincrement())
+  edificio_id      Int
+  numero           Int     @db.SmallInt
+  nombre           String  @db.VarChar(60)
+  /// Ruta del plano SVG exportado desde Figma.
+  plano_svg_ruta   String? @db.VarChar(255)
+
+  edificio edificio @relation(fields: [edificio_id], references: [id], onDelete: Cascade)
+
+  espacio_rel espacio[]
+
+  @@unique([edificio_id, numero])
+}
+
+/// Catálogo de tipos de espacio (sala, baño, escalera, ascensor, terraza, oficina, etc.).
+model tipo_espacio {
+  id           Int     @id @default(autoincrement())
+  nombre       String  @unique @db.VarChar(50)
+  /// Indica si el tipo puede ser resultado de una búsqueda del estudiante.
+  es_buscable  Boolean @default(true)
+
+  espacio_rel espacio[]
+}
+
+/// Espacio físico del plano (sala, oficina, baño, etc.). Se vincula al elemento del SVG.
+model espacio {
+  id               Int     @id @default(autoincrement())
+  piso_id          Int
+  tipo_espacio_id  Int
+  /// Código visible de la sala (p. ej. el que busca el estudiante).
+  codigo           String  @db.VarChar(30)
+  nombre           String? @db.VarChar(120)
+  /// Id del elemento dentro del SVG del piso, para resaltar la sala en el mapa.
+  svg_element_id   String? @db.VarChar(80)
+  capacidad        Int?    @db.SmallInt
+  activo           Boolean @default(true)
+
+  piso          piso         @relation(fields: [piso_id], references: [id], onDelete: Cascade)
+  tipo_espacio  tipo_espacio @relation(fields: [tipo_espacio_id], references: [id], onDelete: Restrict)
+
+  alias_rel               espacio_alias[]
+  equipamiento_rel        equipamiento[]
+  area_rel                area_institucional[]
+  totem_rel               totem[]
+  registro_consulta_rel   registro_consulta[]
+
+  @@unique([piso_id, codigo])
+  @@index([codigo])
+  @@index([tipo_espacio_id])
+}
+
+/// Nombres alternativos de un espacio, para que la búsqueda lo encuentre (p. ej. "pañol").
+model espacio_alias {
+  id          Int    @id @default(autoincrement())
+  espacio_id  Int
+  alias       String @db.VarChar(120)
+
+  espacio espacio @relation(fields: [espacio_id], references: [id], onDelete: Cascade)
+
+  @@unique([espacio_id, alias])
+  @@index([alias])
+}
+
+/// Equipamiento disponible en un espacio (proyector, computadores, pizarra, etc.).
+model equipamiento {
+  id           Int     @id @default(autoincrement())
+  espacio_id   Int
+  nombre       String  @db.VarChar(100)
+  cantidad     Int     @default(1) @db.SmallInt
+  observacion  String? @db.VarChar(200)
+
+  espacio espacio @relation(fields: [espacio_id], references: [id], onDelete: Cascade)
+
+  @@unique([espacio_id, nombre])
+}
+
+/// Área institucional de atención (financiamiento, informática, asuntos estudiantiles, etc.). El directorio del tótem se organiza por áreas, no por personas.
+model area_institucional {
+  id                Int     @id @default(autoincrement())
+  nombre            String  @unique @db.VarChar(120)
+  descripcion       String? @db.VarChar(300)
+  espacio_id        Int?
+  horario_atencion  String? @db.VarChar(200)
+  /// Correo de contacto del área (casilla compartida, no personal).
+  correo_contacto   String? @db.VarChar(150)
+  /// Anexo telefónico del área.
+  anexo             String? @db.VarChar(20)
+
+  espacio espacio? @relation(fields: [espacio_id], references: [id], onDelete: SetNull)
+
+  tramite_rel  tramite[]
+  carrera_rel  carrera[]
+  pregunta_rel pregunta_frecuente[]
+}
+
+// ---------------------------------------------------------------------
+// DOMINIO 4: PROCESOS / TRÁMITES
+// ---------------------------------------------------------------------
+
+/// Trámite administrativo que el estudiante puede consultar.
+model tramite {
+  id           Int     @id @default(autoincrement())
+  area_id      Int
+  nombre       String  @db.VarChar(150)
+  descripcion  String? @db.Text
+  /// Plazo de resolución en días hábiles, si corresponde.
+  plazo_dias   Int?    @db.SmallInt
+  activo       Boolean @default(true)
+
+  area area_institucional @relation(fields: [area_id], references: [id], onDelete: Restrict)
+
+  paso_rel       tramite_paso[]
+  requisito_rel  tramite_requisito[]
+
+  @@index([area_id])
+}
+
+/// Paso ordenado de la guía de un trámite.
+model tramite_paso {
+  id           Int    @id @default(autoincrement())
+  tramite_id   Int
+  orden        Int    @db.SmallInt
+  titulo       String @db.VarChar(150)
+  descripcion  String @db.Text
+
+  tramite tramite @relation(fields: [tramite_id], references: [id], onDelete: Cascade)
+
+  @@unique([tramite_id, orden])
+}
+
+/// Documento o requisito que el estudiante debe presentar en un trámite.
+model tramite_requisito {
+  id          Int     @id @default(autoincrement())
+  tramite_id  Int
+  nombre      String  @db.VarChar(150)
+  obligatorio Boolean @default(true)
+
+  tramite tramite @relation(fields: [tramite_id], references: [id], onDelete: Cascade)
+
+  @@index([tramite_id])
+}
+
+/// Categoría temática de las preguntas frecuentes.
+model categoria_faq {
+  id      Int    @id @default(autoincrement())
+  nombre  String @unique @db.VarChar(100)
+  orden   Int    @default(0) @db.SmallInt
+
+  pregunta_rel pregunta_frecuente[]
+}
+
+/// Pregunta frecuente y su respuesta, gestionada desde la app de escritorio.
+model pregunta_frecuente {
+  id               Int      @id @default(autoincrement())
+  categoria_id     Int
+  /// Área institucional que responde o resuelve la consulta (nula si es general).
+  area_id          Int?
+  pregunta         String   @db.VarChar(300)
+  respuesta        String   @db.Text
+  publicada        Boolean  @default(false)
+  creado_por_id    Int
+  creado_en        DateTime @default(now())
+  actualizado_en   DateTime @updatedAt
+
+  categoria   categoria_faq       @relation(fields: [categoria_id], references: [id], onDelete: Restrict)
+  area        area_institucional? @relation(fields: [area_id], references: [id], onDelete: SetNull)
+  creado_por  usuario             @relation(fields: [creado_por_id], references: [id], onDelete: Restrict)
+
+  @@index([categoria_id])
+  @@index([area_id])
+}
+
+/// Verificación de identidad por código de un solo uso enviado al correo institucional.
+model intento_autenticacion {
+  id               Int                 @id @default(autoincrement())
+  /// Correo que la persona escribió en el tótem.
+  correo_ingresado String              @db.VarChar(150)
+  /// Hash del código de 6 dígitos enviado (nunca el código en claro).
+  codigo_hash      String              @db.VarChar(128)
+  /// Códigos incorrectos ingresados; al superar el máximo configurado el intento queda RECHAZADA.
+  intentos_fallidos Int                @default(0) @db.SmallInt
+  /// Usuario resuelto a partir del correo, si pertenece a un dominio aceptado.
+  usuario_id       Int?
+  totem_id         Int
+  estado           EstadoAutenticacion @default(PENDIENTE)
+  solicitado_en    DateTime            @default(now())
+  expira_en        DateTime
+  resuelto_en      DateTime?
+
+  usuario usuario? @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
+  totem   totem    @relation(fields: [totem_id], references: [id], onDelete: Restrict)
+
+  enrolamiento_rel enrolamiento?
+
+  @@index([usuario_id])
+  @@index([totem_id])
+}
+
+/// Proceso de enrolamiento fotográfico de un usuario (estudiante, docente o funcionario). Módulo opcional.
+model enrolamiento {
+  id                        Int                @id @default(autoincrement())
+  usuario_id                Int
+  /// Verificación por código que habilitó este enrolamiento (1:1).
+  intento_autenticacion_id  Int                @unique
+  totem_id                  Int
+  estado                    EstadoEnrolamiento @default(INICIADO)
+  iniciado_en               DateTime           @default(now())
+  completado_en             DateTime?
+
+  usuario     usuario               @relation(fields: [usuario_id], references: [id], onDelete: Restrict)
+  intento     intento_autenticacion @relation(fields: [intento_autenticacion_id], references: [id], onDelete: Restrict)
+  totem       totem                 @relation(fields: [totem_id], references: [id], onDelete: Restrict)
+
+  captura_rel        captura_facial[]
+  registro_error_rel registro_error[]
+
+  @@index([usuario_id])
+  @@index([totem_id])
+}
+
+/// Resultado de la validación de la fotografía con Google Vision AI. La imagen es un dato biométrico y se elimina; solo permanece el resultado.
+model captura_facial {
+  id                Int       @id @default(autoincrement())
+  enrolamiento_id   Int
+  /// Ubicación temporal de la imagen. Nula una vez eliminada (de inmediato, o como máximo a las 24 horas si falló la carga).
+  ruta_imagen       String?   @db.VarChar(255)
+  rostro_valido     Boolean
+  /// Confianza de detección entregada por Vision AI (0 a 1).
+  confianza         Decimal?  @db.Decimal(4, 3)
+  /// Motivo cuando la foto se rechaza (sin rostro, varios rostros, baja calidad).
+  motivo_rechazo    String?   @db.VarChar(100)
+  capturada_en      DateTime  @default(now())
+  /// Fecha y hora en que se eliminó la imagen.
+  eliminada_en      DateTime?
+
+  enrolamiento enrolamiento @relation(fields: [enrolamiento_id], references: [id], onDelete: Cascade)
+
+  @@index([enrolamiento_id])
+}
+
+// ---------------------------------------------------------------------
+// DOMINIO 5: SISTEMA / TÓTEM
+// ---------------------------------------------------------------------
+
+/// Tótem físico instalado en la sede.
+model totem {
+  id                 Int       @id @default(autoincrement())
+  nombre             String    @unique @db.VarChar(80)
+  sede_id            Int
+  /// Espacio donde está instalado, para mostrar "usted está aquí" en el mapa.
+  espacio_id         Int?
+  activo             Boolean   @default(true)
+  ultimo_latido_en   DateTime?
+
+  sede    sede     @relation(fields: [sede_id], references: [id], onDelete: Restrict)
+  espacio espacio? @relation(fields: [espacio_id], references: [id], onDelete: SetNull)
+
+  aviso_totem_rel       aviso_totem[]
+  intento_rel           intento_autenticacion[]
+  enrolamiento_rel      enrolamiento[]
+  registro_consulta_rel registro_consulta[]
+  registro_error_rel    registro_error[]
+
+  @@index([sede_id])
+}
+
+/// Aviso institucional publicado desde el panel administrativo.
+model aviso {
+  id              Int       @id @default(autoincrement())
+  titulo          String    @db.VarChar(150)
+  contenido       String    @db.Text
+  vigente_desde   DateTime
+  vigente_hasta   DateTime?
+  prioridad       Int       @default(0) @db.SmallInt
+  activo          Boolean   @default(true)
+  creado_por_id   Int
+  creado_en       DateTime  @default(now())
+
+  creado_por usuario @relation(fields: [creado_por_id], references: [id], onDelete: Restrict)
+
+  aviso_totem_rel aviso_totem[]
+}
+
+/// Tótems en los que se muestra cada aviso (N:M).
+model aviso_totem {
+  aviso_id  Int
+  totem_id  Int
+
+  aviso aviso @relation(fields: [aviso_id], references: [id], onDelete: Cascade)
+  totem totem @relation(fields: [totem_id], references: [id], onDelete: Cascade)
+
+  @@id([aviso_id, totem_id])
+}
+
+/// Parámetros de la instalación: identidad de la institución (nombre, logo, colores, dominios de correo), módulo de enrolamiento y tiempos de operación.
+model configuracion_sistema {
+  clave           String   @id @db.VarChar(80)
+  valor           String   @db.VarChar(255)
+  descripcion     String?  @db.VarChar(255)
+  actualizado_en  DateTime @updatedAt
+}
+
+/// Bitácora de acciones realizadas en el panel administrativo.
+model registro_auditoria {
+  id          BigInt   @id @default(autoincrement())
+  usuario_id  Int?
+  accion      String   @db.VarChar(60)
+  entidad     String   @db.VarChar(60)
+  entidad_id  String?  @db.VarChar(40)
+  detalle     Json?
+  creado_en   DateTime @default(now())
+
+  usuario usuario? @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
+
+  @@index([usuario_id])
+  @@index([entidad, entidad_id])
+}
+
+/// Consultas hechas en el tótem; permite medir uso y detectar búsquedas sin resultado.
+model registro_consulta {
+  id              BigInt       @id @default(autoincrement())
+  totem_id        Int
+  tipo            TipoConsulta
+  termino         String?      @db.VarChar(200)
+  hubo_resultado  Boolean
+  /// Espacio encontrado, cuando la consulta es de tipo SALA.
+  espacio_id      Int?
+  creado_en       DateTime     @default(now())
+
+  totem   totem    @relation(fields: [totem_id], references: [id], onDelete: Cascade)
+  espacio espacio? @relation(fields: [espacio_id], references: [id], onDelete: SetNull)
+
+  @@index([totem_id, creado_en])
+  @@index([tipo])
+}
+
+/// Fallas de los servicios externos (Google Vision AI, correo, sistema de enrolamiento); permite investigar incidentes sin bloquear el resto del tótem.
+model registro_error {
+  id               BigInt          @id @default(autoincrement())
+  servicio         ServicioExterno
+  /// Operación que falló (p. ej. enviar_codigo, validar_foto, enviar_enrolamiento).
+  operacion        String          @db.VarChar(60)
+  /// Código de estado HTTP devuelto por el servicio, si lo hubo.
+  codigo_http      Int?            @db.SmallInt
+  mensaje          String          @db.VarChar(300)
+  totem_id         Int?
+  enrolamiento_id  Int?
+  creado_en        DateTime        @default(now())
+
+  totem        totem?        @relation(fields: [totem_id], references: [id], onDelete: SetNull)
+  enrolamiento enrolamiento? @relation(fields: [enrolamiento_id], references: [id], onDelete: SetNull)
+
+  @@index([servicio, creado_en])
+}
