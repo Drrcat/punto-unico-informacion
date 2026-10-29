@@ -1,8 +1,9 @@
 // Funciones que comparten todas las pantallas del tótem.
 
 // Dirección de la API del backend. Si cambia (por ejemplo con Docker), se cambia solo aquí.
-// Sirve igual si la web la entrega el backend (localhost:3000) o un servidor aparte (localhost:5500).
-const API_URL = "http://localhost:3000/api";
+// Usa el mismo host con que se abrió la página (localhost, 127.0.0.1 o la IP del tótem), en el puerto 3000.
+// Sirve igual si la web la entrega el backend (:3000), un servidor aparte (:5500) o se abre como archivo.
+const API_URL = `http://${location.hostname || "localhost"}:3000/api`;
 
 // Pide datos a la API y devuelve el JSON. Lanza un error si la respuesta no es OK.
 async function pedirApi(ruta) {
