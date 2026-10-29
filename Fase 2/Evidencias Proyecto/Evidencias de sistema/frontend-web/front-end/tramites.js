@@ -70,7 +70,7 @@ function abrirTramite(id) {
 
 // 6. Función que dibuja el detalle: resumen, pasos y requisitos
 function mostrarDetalle(tramite) {
-  const pasos = tramite.paso_rel.map(paso => `
+  const pasos = tramite.pasos.map(paso => `
     <li class="paso">
       <span class="paso-numero">${paso.orden}</span>
       <div>
@@ -80,7 +80,7 @@ function mostrarDetalle(tramite) {
     </li>
   `).join("");
 
-  const requisitos = tramite.requisito_rel.map(req => `
+  const requisitos = tramite.requisitos.map(req => `
     <li class="requisito">
       ${escapar(req.nombre)}
       ${req.obligatorio ? "" : "<em>Opcional</em>"}
@@ -94,19 +94,19 @@ function mostrarDetalle(tramite) {
       ${tramite.descripcion ? `<p>${escapar(tramite.descripcion)}</p>` : ""}
 
       <div class="resumen-tramite">
-        ${tramite.plazo_dias != null ? `
+        ${tramite.plazoDias != null ? `
           <div class="dato">
             <span class="dato-icono" aria-hidden="true">⏱️</span>
-            <div><b>Plazo de respuesta</b><span>${textoPlazo(tramite.plazo_dias)}</span></div>
+            <div><b>Plazo de respuesta</b><span>${textoPlazo(tramite.plazoDias)}</span></div>
           </div>` : ""}
         <div class="dato">
           <span class="dato-icono" aria-hidden="true">📍</span>
           <div><b>Dónde se realiza</b><span>${escapar(tramite.area.nombre)}</span></div>
         </div>
-        ${tramite.area.horario_atencion ? `
+        ${tramite.area.horarioAtencion ? `
           <div class="dato">
             <span class="dato-icono" aria-hidden="true">🕘</span>
-            <div><b>Horario de atención</b><span>${escapar(tramite.area.horario_atencion)}</span></div>
+            <div><b>Horario de atención</b><span>${escapar(tramite.area.horarioAtencion)}</span></div>
           </div>` : ""}
       </div>
 

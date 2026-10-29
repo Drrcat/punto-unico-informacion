@@ -1,0 +1,1029 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/pisos": {
+      "get": {
+        "operationId": "PisosController_listar",
+        "parameters": [
+          {
+            "name": "edificioId",
+            "required": false,
+            "in": "query",
+            "description": "Muestra solo los pisos de este edificio.",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Lista los pisos con la dirección de su plano SVG.",
+        "tags": [
+          "Infraestructura: pisos"
+        ]
+      }
+    },
+    "/api/pisos/{id}": {
+      "get": {
+        "operationId": "PisosController_obtener",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Detalle de un piso con sus espacios (id del elemento del SVG incluido).",
+        "tags": [
+          "Infraestructura: pisos"
+        ]
+      }
+    },
+    "/api/pisos/{id}/plano": {
+      "get": {
+        "operationId": "PisosController_plano",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "image/svg+xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Plano SVG del piso.",
+        "tags": [
+          "Infraestructura: pisos"
+        ]
+      }
+    },
+    "/api/salas/tipos": {
+      "get": {
+        "operationId": "SalasController_tipos",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Catálogo de tipos de espacio (sala, baño, escalera, etc.).",
+        "tags": [
+          "Infraestructura: salas"
+        ]
+      }
+    },
+    "/api/salas": {
+      "get": {
+        "operationId": "SalasController_listar",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Texto a buscar: código, nombre, alias, área que funciona allí o tipo de espacio. Ignora tildes y mayúsculas.",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "pisoId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "tipoEspacioId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "desplazamiento",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "todas",
+            "required": false,
+            "in": "query",
+            "description": "Solo administradores: incluye también los espacios inactivos y los tipos no buscables.",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Busca y lista salas, oficinas y otros espacios con su piso y ubicación.",
+        "tags": [
+          "Infraestructura: salas"
+        ]
+      },
+      "post": {
+        "operationId": "SalasController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearSalaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Crea una sala (administrador).",
+        "tags": [
+          "Infraestructura: salas"
+        ]
+      }
+    },
+    "/api/salas/{id}": {
+      "get": {
+        "operationId": "SalasController_obtener",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Detalle de una sala: equipamiento, áreas que funcionan allí, piso y plano.",
+        "tags": [
+          "Infraestructura: salas"
+        ]
+      },
+      "put": {
+        "operationId": "SalasController_actualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarSalaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edita una sala (administrador). Solo cambia los campos enviados.",
+        "tags": [
+          "Infraestructura: salas"
+        ]
+      },
+      "delete": {
+        "operationId": "SalasController_eliminar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Elimina una sala (administrador). Falla si un área o un tótem la usa.",
+        "tags": [
+          "Infraestructura: salas"
+        ]
+      }
+    },
+    "/api/areas": {
+      "get": {
+        "operationId": "AreasController_listar",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Busca por nombre del área, lo que atiende, sus trámites o las carreras que atiende.",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Lista las áreas con su ubicación, lo que atienden y su canal de contacto.",
+        "tags": [
+          "Infraestructura: áreas"
+        ]
+      },
+      "post": {
+        "operationId": "AreasController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearAreaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Crea un área (administrador).",
+        "tags": [
+          "Infraestructura: áreas"
+        ]
+      }
+    },
+    "/api/areas/{id}": {
+      "get": {
+        "operationId": "AreasController_obtener",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Detalle de un área: ubicación, trámites y carreras que atiende.",
+        "tags": [
+          "Infraestructura: áreas"
+        ]
+      },
+      "put": {
+        "operationId": "AreasController_actualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarAreaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edita un área (administrador). Solo cambia los campos enviados.",
+        "tags": [
+          "Infraestructura: áreas"
+        ]
+      },
+      "delete": {
+        "operationId": "AreasController_eliminar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Elimina un área (administrador). Falla si resuelve trámites.",
+        "tags": [
+          "Infraestructura: áreas"
+        ]
+      }
+    },
+    "/api/tramites": {
+      "get": {
+        "operationId": "TramitesController_listar",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Busca por nombre, descripción o área que resuelve el trámite.",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "areaId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Lista los trámites activos con el área que los resuelve.",
+        "tags": [
+          "Trámites"
+        ]
+      }
+    },
+    "/api/tramites/{id}": {
+      "get": {
+        "operationId": "TramitesController_obtener",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Detalle de un trámite: pasos, requisitos y área responsable con su ubicación.",
+        "tags": [
+          "Trámites"
+        ]
+      }
+    },
+    "/api/enrolamiento/estado": {
+      "get": {
+        "operationId": "EnrolamientoController_estado",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Indica si el módulo está activo y qué parámetros usa (dominios aceptados, intentos).",
+        "tags": [
+          "Enrolamiento"
+        ]
+      }
+    },
+    "/api/enrolamiento/autenticar": {
+      "post": {
+        "operationId": "EnrolamientoController_autenticar",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IniciarVerificacionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Inicia la verificación: envía un código de un solo uso al correo institucional.",
+        "tags": [
+          "Enrolamiento"
+        ]
+      }
+    },
+    "/api/enrolamiento/autenticar/{id}/codigo": {
+      "post": {
+        "operationId": "EnrolamientoController_validarCodigo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarCodigoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Valida el código ingresado. Si es correcto, crea la solicitud y entrega el token para enviar la foto.",
+        "tags": [
+          "Enrolamiento"
+        ]
+      }
+    },
+    "/api/enrolamiento/{id}/foto": {
+      "post": {
+        "operationId": "EnrolamientoController_foto",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "foto": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPG o PNG. Se puede omitir para reintentar con la copia conservada tras una falla técnica."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Valida la fotografía con Google Vision AI y la envía al sistema de enrolamiento.",
+        "tags": [
+          "Enrolamiento"
+        ]
+      }
+    },
+    "/api/enrolamiento/{id}/cancelar": {
+      "post": {
+        "operationId": "EnrolamientoController_cancelar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancela la solicitud y elimina cualquier fotografía pendiente (por ejemplo, por inactividad).",
+        "tags": [
+          "Enrolamiento"
+        ]
+      }
+    },
+    "/api/enrolamiento/solicitudes": {
+      "get": {
+        "operationId": "EnrolamientoController_solicitudes",
+        "parameters": [
+          {
+            "name": "estado",
+            "required": false,
+            "in": "query",
+            "description": "Estado de la solicitud. Los `VERIFICACION_*` son solicitudes que no pasaron la verificación del correo.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INICIADO",
+                "FOTO_PENDIENTE",
+                "COMPLETADO",
+                "FALLIDO",
+                "CANCELADO",
+                "VERIFICACION_PENDIENTE",
+                "VERIFICACION_EXPIRADA",
+                "VERIFICACION_RECHAZADA"
+              ]
+            }
+          },
+          {
+            "name": "correo",
+            "required": false,
+            "in": "query",
+            "description": "Texto contenido en el correo.",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 150,
+              "type": "string"
+            }
+          },
+          {
+            "name": "desde",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasta",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "desplazamiento",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Consulta el estado de las solicitudes de enrolamiento (administrador).",
+        "tags": [
+          "Enrolamiento"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "OrientaSede API",
+    "description": "",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "EquipamientoDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "cantidad": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 32767
+          },
+          "observacion": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "nombre"
+        ]
+      },
+      "CrearSalaDto": {
+        "type": "object",
+        "properties": {
+          "pisoId": {
+            "type": "number",
+            "minimum": 1
+          },
+          "tipoEspacioId": {
+            "type": "number",
+            "minimum": 1
+          },
+          "codigo": {
+            "type": "string",
+            "description": "Código visible, único dentro del piso (p. ej. \"S01\" o \"PA-323\").",
+            "minLength": 1,
+            "maxLength": 30
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 120
+          },
+          "svgElementId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Id del elemento del plano SVG que se resalta al mostrar la sala.",
+            "maxLength": 80
+          },
+          "capacidad": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 32767
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "alias": {
+            "description": "Nombres alternativos con los que también se debe encontrar la sala.",
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 120,
+              "minLength": 1
+            }
+          },
+          "equipamiento": {
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EquipamientoDto"
+            }
+          }
+        },
+        "required": [
+          "pisoId",
+          "tipoEspacioId",
+          "codigo"
+        ]
+      },
+      "ActualizarSalaDto": {
+        "type": "object",
+        "properties": {
+          "pisoId": {
+            "type": "number",
+            "minimum": 1
+          },
+          "tipoEspacioId": {
+            "type": "number",
+            "minimum": 1
+          },
+          "codigo": {
+            "type": "string",
+            "description": "Código visible, único dentro del piso (p. ej. \"S01\" o \"PA-323\").",
+            "minLength": 1,
+            "maxLength": 30
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 120
+          },
+          "svgElementId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Id del elemento del plano SVG que se resalta al mostrar la sala.",
+            "maxLength": 80
+          },
+          "capacidad": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 32767
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "alias": {
+            "description": "Nombres alternativos con los que también se debe encontrar la sala.",
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 120,
+              "minLength": 1
+            }
+          },
+          "equipamiento": {
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EquipamientoDto"
+            }
+          }
+        }
+      },
+      "CrearAreaDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 300
+          },
+          "espacioId": {
+            "type": "number",
+            "nullable": true,
+            "description": "Sala u oficina donde atiende el área.",
+            "minimum": 1
+          },
+          "horarioAtencion": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 200
+          },
+          "correoContacto": {
+            "type": "string",
+            "nullable": true,
+            "description": "Casilla compartida del área, no un correo personal.",
+            "maxLength": 150,
+            "format": "email"
+          },
+          "anexo": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 20
+          }
+        },
+        "required": [
+          "nombre"
+        ]
+      },
+      "ActualizarAreaDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 300
+          },
+          "espacioId": {
+            "type": "number",
+            "nullable": true,
+            "description": "Sala u oficina donde atiende el área.",
+            "minimum": 1
+          },
+          "horarioAtencion": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 200
+          },
+          "correoContacto": {
+            "type": "string",
+            "nullable": true,
+            "description": "Casilla compartida del área, no un correo personal.",
+            "maxLength": 150,
+            "format": "email"
+          },
+          "anexo": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 20
+          }
+        }
+      },
+      "IniciarVerificacionDto": {
+        "type": "object",
+        "properties": {
+          "correo": {
+            "type": "string",
+            "description": "Correo institucional de la persona.",
+            "maxLength": 150,
+            "format": "email"
+          }
+        },
+        "required": [
+          "correo"
+        ]
+      },
+      "ValidarCodigoDto": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "description": "Código de seis dígitos recibido por correo.",
+            "pattern": "^[0-9]{6}$"
+          }
+        },
+        "required": [
+          "codigo"
+        ]
+      }
+    }
+  }
+}

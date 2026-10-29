@@ -7,20 +7,24 @@ Interfaz táctil del tótem de orientación estudiantil. HTML, CSS y JavaScript 
 | Archivo | Pantalla | API que usa |
 |---|---|---|
 | `index.html` | Menú principal | — |
-| `faqs.html` | Preguntas frecuentes (con buscador) | `GET /faqs` |
-| `areas.html` | ¿Dónde debo ir? (directorio de áreas) | `GET /areas` |
-| `tramites.html` | Guía de trámites (pasos y requisitos) | `GET /tramites`, `GET /tramites/:id` |
-| `mapa.html` | Mapa y Salas: muestra en un iframe el mapa interactivo de Patricia (`OrientaSede_Mapa_Piso2y3_v2.html?marco=0`), sin modificarlo | — (datos dentro del mapa) |
+| `faqs.html` | Preguntas frecuentes (con buscador) | `GET /api/faq` |
+| `areas.html` | ¿Dónde debo ir? (directorio de áreas) | `GET /api/areas` |
+| `tramites.html` | Guía de trámites (pasos y requisitos) | `GET /api/tramites`, `GET /api/tramites/:id` |
+| `mapa-totem.html` | Mapa y Salas: mapa interactivo de Patricia (pisos 2 y 3), con sus planos en `assets/planos/` | `GET /api/pisos`, `GET /api/salas` |
 
 Archivos compartidos:
 
 - `styles.css`: estilos de todas las pantallas (misma paleta que la app de escritorio).
-- `comun.js`: dirección de la API (`API_URL`) y funciones comunes.
+- `comun.js`: dirección de la API (`API_URL`, `http://localhost:3000/api`) y funciones comunes.
 - `totem.js`: modo tótem (ver abajo).
 
 ## Cómo probarla
 
-1. Levantar el backend (carpeta `../backend`, por defecto en `http://localhost:3000`).
+La forma más simple: levantar el backend (carpeta `../backend`, `npm run start:dev`). Con `PUBLIC_DIR=../frontend-web/front-end` en su `.env`, el mismo backend entrega la web y el mapa en `http://localhost:3000`.
+
+También se puede servir aparte (el backend permite ese origen con `CORS_ORIGENES`):
+
+1. Levantar el backend en `http://localhost:3000`.
 2. Servir la carpeta `front-end/` con cualquier servidor estático, por ejemplo:
 
    ```bash
