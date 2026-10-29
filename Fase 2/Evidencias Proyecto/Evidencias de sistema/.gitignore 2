@@ -1,6 +1,0 @@
-# "prisma generate" (Prisma 6) instala @prisma/client junto al schema de database/ y deja estos archivos
-# aquí. No son parte del proyecto: el cliente que usa el backend está en backend/node_modules.
-/node_modules/
-/package.json
-/package-lock.json
-.DS_Store
