@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Enrolamiento facial · Punto Único</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="barra-superior">
+    <div class="marca">
+      <span class="logo">PU</span>
+      <div>
+        <strong>Punto Único de Información</strong>
+        <small>Tótem de orientación estudiantil</small>
+      </div>
+    </div>
+    <a class="boton-volver" href="index.html">‹ Inicio</a>
+  </header>
+
+  <section class="titulo">
+    <h1>Enrolamiento facial</h1>
+    <p>Registra tu foto para ingresar a la sede con reconocimiento facial</p>
+  </section>
+
+  <main class="contenedor">
+    <!-- Avance: correo → código → foto -->
+    <ol id="etapas" class="etapas" hidden>
+      <li data-paso="correo">1. Correo</li>
+      <li data-paso="codigo">2. Código</li>
+      <li data-paso="foto">3. Foto</li>
+    </ol>
+
+    <p id="aviso" class="mensaje" hidden></p>
+
+    <!-- Paso 1: correo institucional -->
+    <form id="paso-correo" class="panel" hidden>
+      <label for="correo"><b>Tu correo institucional</b></label>
+      <p class="nota" id="dominios"></p>
+      <input type="email" id="correo" class="buscador" placeholder="nombre.apellido@duocuc.cl" autocomplete="off" required>
+      <button type="submit" class="boton-principal">Enviar código a mi correo</button>
+    </form>
+
+    <!-- Paso 2: código de 6 dígitos -->
+    <form id="paso-codigo" class="panel" hidden>
+      <label for="codigo"><b>Ingresa el código de 6 dígitos</b></label>
+      <p class="nota" id="texto-codigo"></p>
+      <input type="text" id="codigo" class="buscador campo-codigo" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code" required>
+      <button type="submit" class="boton-principal">Validar código</button>
+      <button type="button" class="boton-secundario" id="otro-correo">‹ Usar otro correo o pedir un código nuevo</button>
+    </form>
+
+    <!-- Paso 3: fotografía -->
+    <section id="paso-foto" class="panel" hidden>
+      <p><b id="saludo"></b></p>
+      <p class="nota">Mira a la cámara, sin lentes de sol ni gorro, con la cara despejada y bien iluminada.</p>
+
+      <div class="camara">
+        <video id="video" autoplay playsinline muted></video>
+        <img id="vista-previa" alt="Foto tomada" hidden>
+      </div>
+
+      <div class="acciones">
+        <button type="button" class="boton-principal" id="tomar-foto">📸 Tomar foto</button>
+        <button type="button" class="boton-principal" id="enviar-foto" hidden>Usar esta foto</button>
+        <button type="button" class="boton-secundario" id="repetir-foto" hidden>Tomar otra</button>
+        <!-- Solo si el equipo no tiene cámara (por ejemplo, al probar en un computador sin cámara) -->
+        <label class="boton-secundario" id="subir-foto" hidden>
+          Elegir una foto del equipo
+          <input type="file" id="archivo-foto" accept="image/jpeg,image/png" hidden>
+        </label>
+      </div>
+      <button type="button" class="boton-secundario" id="cancelar">Cancelar enrolamiento</button>
+    </section>
+
+    <!-- Paso final -->
+    <section id="paso-listo" class="panel centrado" hidden>
+      <p class="icono-listo" aria-hidden="true">✓</p>
+      <h2>¡Listo! Tu foto quedó registrada</h2>
+      <p class="nota">Ya puedes usar el reconocimiento facial para ingresar a la sede.</p>
+      <a class="boton-principal" href="index.html">Volver al inicio</a>
+    </section>
+  </main>
+
+  <footer class="pie">
+    <p>Punto Único de Información · Tótem de orientación estudiantil</p>
+  </footer>
+
+  <canvas id="lienzo" hidden></canvas>
+
+  <script src="comun.js"></script>
+  <script src="enrolamiento.js"></script>
+  <script src="totem.js"></script>
+
+</body>
+</html>

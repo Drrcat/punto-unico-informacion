@@ -109,6 +109,7 @@ function mostrarDetalle(tramite) {
             <div><b>Horario de atención</b><span>${escapar(tramite.area.horarioAtencion)}</span></div>
           </div>` : ""}
       </div>
+      ${botonMapa(tramite.area.ubicacion)}
 
       ${requisitos ? `<h3>Lo que necesitas</h3><ul class="requisitos">${requisitos}</ul>` : ""}
       ${pasos ? `<h3>Paso a paso</h3><ol class="pasos">${pasos}</ol>` : ""}

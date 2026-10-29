@@ -52,11 +52,30 @@
         <span class="flecha" aria-hidden="true">›</span>
       </a>
 
-      <a class="opcion-menu" href="mapa-totem.html">
+      <a class="opcion-menu" href="mapa.html">
         <span class="icono-menu" aria-hidden="true">🗺️</span>
         <div>
-          <strong>Mapa y Salas</strong>
-          <small>Ubica salas y oficinas en el plano de la sede</small>
+          <strong>Mapa de la sede</strong>
+          <small>Ubica salas y oficinas en el plano de cada piso</small>
+        </div>
+        <span class="flecha" aria-hidden="true">›</span>
+      </a>
+
+      <a class="opcion-menu" href="salas.html">
+        <span class="icono-menu" aria-hidden="true">🚪</span>
+        <div>
+          <strong>Salas y espacios</strong>
+          <small>Busca una sala, un baño o un ascensor por piso y tipo</small>
+        </div>
+        <span class="flecha" aria-hidden="true">›</span>
+      </a>
+
+      <!-- Solo aparece si el enrolamiento está habilitado en esta sede (ver inicio.js) -->
+      <a class="opcion-menu" href="enrolamiento.html" id="opcion-enrolamiento" hidden>
+        <span class="icono-menu" aria-hidden="true">📸</span>
+        <div>
+          <strong>Enrolamiento facial</strong>
+          <small>Registra tu foto para ingresar con reconocimiento facial</small>
         </div>
         <span class="flecha" aria-hidden="true">›</span>
       </a>
@@ -67,6 +86,8 @@
     <p>Punto Único de Información · Tótem de orientación estudiantil</p>
   </footer>
 
+  <script src="comun.js"></script>
+  <script src="inicio.js"></script>
   <script src="totem.js"></script>
 
 </body>

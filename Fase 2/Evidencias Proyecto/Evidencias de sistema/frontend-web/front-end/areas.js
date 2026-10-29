@@ -61,6 +61,7 @@ function mostrarAreas(lista) {
           ${dato("✉️", "Correo", area.contacto?.correo)}
           ${dato("☎️", "Anexo", area.contacto?.anexo)}
         </div>
+        ${botonMapa(area.ubicacion)}
       </div>
     </div>
   `).join("");

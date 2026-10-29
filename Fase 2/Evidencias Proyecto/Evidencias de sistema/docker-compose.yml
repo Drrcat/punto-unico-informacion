@@ -1,0 +1,31 @@
+# OrientaSede (Punto Único de Información): backend + web del tótem.
+#
+# Solo levanta el backend. La base de datos está en Supabase (DATABASE_URL y DIRECT_URL
+# del archivo backend/.env), así que NO hay servicio de PostgreSQL local.
+#
+# Desde la carpeta "Evidencias de sistema":
+#     docker compose up --build -d
+# La web del tótem y el mapa quedan en http://localhost:3000 y la API en http://localhost:3000/api
+
+name: orientasede
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file: backend/.env
+    ports:
+      - "3000:3000"
+    volumes:
+      # Fotografías temporales del enrolamiento (solo las usa el backend)
+      - fotos:/app/backend/fotos
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/faq').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  fotos:
