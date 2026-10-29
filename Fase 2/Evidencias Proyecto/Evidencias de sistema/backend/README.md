@@ -31,47 +31,30 @@ La instalación es genérica: ningún nombre, logotipo ni dominio de una institu
 
 ## Puesta en marcha
 
-Con Docker, el procedimiento completo está en el README de la raíz del repositorio. Para ejecutar el backend directamente en el equipo de desarrollo:
+La base de datos está en **Supabase** (PostgreSQL en la nube): no se crea ni se levanta una base local. El esquema y los datos ya están cargados allí.
 
 ```bash
 cd backend
 npm ci
 
-# 1. Base de datos vacía y esquema (migración inicial)
-createdb orientasede
-psql -d orientasede -v ON_ERROR_STOP=1 -f ../database/prisma/migrations/0001_init/migration.sql
-#   o, con el motor de Prisma disponible:  npx prisma migrate deploy --schema=../database/prisma/schema.prisma
+# 1. Variables: copiar el ejemplo y completar DATABASE_URL y DIRECT_URL con los datos de Supabase
+#    (Project Settings → Database → Connection string), además de JWT_SECRET.
+cp .env.example .env
 
 # 2. Cliente de Prisma y compilación
 npm run prisma:generate
 npm run build
 
-# 3. Variables mínimas
-export DATABASE_URL=postgresql://usuario:clave@localhost:5432/orientasede
-export JWT_SECRET=una_clave_larga_y_aleatoria_de_al_menos_32_caracteres
-export PLANOS_DIR=../frontend-web/front-end/assets/planos
-export PUBLIC_DIR=../frontend-web/front-end
-
-# 4. Carga inicial (ver la sección siguiente) e inicio
-SEED_ADMIN_CORREO=admin@ejemplo.cl SEED_ADMIN_CLAVE='una-clave-segura' npm run seed
+# 3. Inicio (lee el .env automáticamente)
 npm start
 ```
 
-En Windows (PowerShell), los mismos pasos desde `backend/` una vez creada la base y aplicada la migración:
+En Windows (PowerShell) son los mismos pasos, con `copy .env.example .env` en lugar de `cp`.
 
-```powershell
-npm ci
-npm run prisma:generate
-npm run build
-$env:DATABASE_URL = "postgresql://usuario:clave@localhost:5432/orientasede"
-$env:JWT_SECRET = "una_clave_larga_y_aleatoria_de_al_menos_32_caracteres"
-$env:PLANOS_DIR = "../frontend-web/front-end/assets/planos"
-$env:PUBLIC_DIR = "../frontend-web/front-end"
-$env:SEED_ADMIN_CORREO = "admin@ejemplo.cl"
-$env:SEED_ADMIN_CLAVE = "una-clave-segura"
-npm run seed
-npm start
-```
+- `DATABASE_URL` usa el *pooler* de Supabase en modo transacción (puerto **6543**, con `?pgbouncer=true`): es la conexión del backend.
+- `DIRECT_URL` usa el puerto **5432** (modo sesión): Prisma la usa solo para comandos de esquema como `prisma migrate`.
+- Con Docker: `docker compose up --build -d` desde `Evidencias de sistema/` (solo levanta el backend; ver `docker-compose.yml`).
+- La carga inicial (`npm run seed`) es idempotente, pero no hace falta ejecutarla: Supabase ya tiene los datos.
 
 El backend queda en `http://localhost:3000/api`. Fuera de producción también publica la documentación interactiva en `http://localhost:3000/api/docs` (en producción se activa con `DOCS=on`).
 
@@ -92,11 +75,12 @@ Scripts disponibles:
 
 ## Variables de entorno
 
-El backend valida las variables al iniciar y se detiene con un mensaje claro si falta alguna obligatoria. El archivo `.env.example` de la raíz las lista con valores de ejemplo.
+El backend valida las variables al iniciar y se detiene con un mensaje claro si falta alguna obligatoria. El archivo `backend/.env.example` las lista con valores de ejemplo.
 
 | Variable | Obligatoria | Descripción |
 |---|---|---|
-| `DATABASE_URL` | Sí | Cadena de conexión a PostgreSQL. |
+| `DATABASE_URL` | Sí | Cadena de conexión a PostgreSQL: el *pooler* de Supabase (puerto 6543, `?pgbouncer=true`). |
+| `DIRECT_URL` | Para migraciones | Conexión directa a Supabase (puerto 5432); la usa Prisma en `migrate`, no el backend. |
 | `JWT_SECRET` | Sí | Clave con la que se firman y verifican los tokens. En producción debe tener al menos 32 caracteres. |
 | `PORT`, `HOST` | No | Puerto (3000) y dirección de escucha (`0.0.0.0`). |
 | `TOTEM_ID` | No | Id del tótem donde corre la instalación, fila de la tabla `totem` (1). A su nombre se registran las verificaciones y las consultas. |
