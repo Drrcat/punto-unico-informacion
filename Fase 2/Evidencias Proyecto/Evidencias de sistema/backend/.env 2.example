@@ -1,0 +1,71 @@
+# Copiar este archivo como .env en la raíz del repositorio y completar los valores.
+# El archivo .env no se versiona: contiene credenciales que existen solo en el equipo del tótem.
+
+# ---------------------------------------------------------------- General
+TZ=America/Santiago
+
+# ---------------------------------------------------------------- Base de datos
+POSTGRES_USER=orientasede
+POSTGRES_PASSWORD=cambiar_esta_clave
+POSTGRES_DB=orientasede
+DATABASE_URL=postgresql://orientasede:cambiar_esta_clave@db:5432/orientasede
+
+# ---------------------------------------------------------------- Backend
+PORT=3000
+# Clave con la que se firman los tokens. Mínimo 32 caracteres; por ejemplo: openssl rand -hex 32
+JWT_SECRET=cambiar_por_una_clave_larga_y_aleatoria_de_al_menos_32_caracteres
+# Id del tótem de esta instalación (fila de la tabla "totem" que crea la carga inicial)
+TOTEM_ID=1
+# Orígenes autorizados para llamar al backend desde un navegador, separados por coma.
+# Se deja vacío cuando la aplicación web la entrega el propio backend.
+CORS_ORIGENES=
+# Límite general de solicitudes por minuto y por origen
+LIMITE_SOLICITUDES_POR_MIN=300
+
+# ---------------------------------------------------------------- Servicio de correo transaccional (código de verificación)
+# Con CORREO_API_KEY el backend usa Resend. Sin ella imprime el código en el log (solo para desarrollo).
+CORREO_API_KEY=
+CORREO_REMITENTE=
+
+# ---------------------------------------------------------------- Google Vision AI
+# Ruta del archivo de credenciales dentro del contenedor; el archivo se coloca en
+# secrets/google-vision.json y Docker lo monta en esa ruta. Si se deja vacío, el
+# backend usa un validador simulado que acepta cualquier imagen (solo para desarrollo).
+GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google-vision.json
+
+# ---------------------------------------------------------------- Enrolamiento
+# Conector activo (click_visitas, simulado o ninguno) y credenciales del sistema de destino.
+# Estos valores se usan si la tabla configuracion_sistema no define "conector_enrolamiento".
+ENROLAMIENTO_CONECTOR=ninguno
+ENROLAMIENTO_URL=
+ENROLAMIENTO_USUARIO=
+ENROLAMIENTO_CLAVE=
+
+# Almacenamiento temporal de fotografías (solo accesible por el backend)
+FOTOS_DIR=/var/lib/orientasede/fotos
+
+# ---------------------------------------------------------------- Carga inicial de datos (npx prisma db seed)
+# Solo se leen al ejecutar la carga inicial; después se pueden borrar de este archivo.
+SEED_INSTITUCION_NOMBRE=Mi institución
+SEED_SEDE_NOMBRE=Sede principal
+# Dominios de correo aceptados para el enrolamiento, separados por coma. Sin ellos, ningún correo es aceptado.
+SEED_DOMINIOS_CORREO=
+# ninguno (módulo desactivado), simulado o click_visitas
+SEED_CONECTOR_ENROLAMIENTO=ninguno
+# Si se definen ambas, la carga inicial crea el primer administrador
+SEED_ADMIN_CORREO=
+SEED_ADMIN_CLAVE=
+
+# ---------------------------------------------------------------- Supabase (base en la nube, en lugar de "db" local)
+# Pooler en modo transacción (puerto 6543) para la aplicación, y conexión directa (5432) para migraciones.
+# DATABASE_URL="postgresql://postgres.<proyecto>:<clave>@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true"
+# DIRECT_URL="postgresql://postgres.<proyecto>:<clave>@aws-0-<region>.pooler.supabase.com:5432/postgres"
+
+# ---------------------------------------------------------------- Preguntas frecuentes y web del tótem
+# Id de un usuario existente: queda como autor de las preguntas creadas desde la app de escritorio
+FAQ_CREATED_BY_ID=1
+# El backend entrega la web del tótem (páginas, mapa y planos) en http://localhost:3000
+PUBLIC_DIR=../frontend-web/front-end
+PLANOS_DIR=../frontend-web/front-end/assets/planos
+# Para llamar a la API desde la web servida aparte (puerto 5500) y desde la app de escritorio (origen "null")
+# CORS_ORIGENES=http://localhost:5500,null
