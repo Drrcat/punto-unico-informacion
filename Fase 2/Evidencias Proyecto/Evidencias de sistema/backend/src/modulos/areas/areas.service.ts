@@ -83,31 +83,31 @@ export class AreasService {
 
   // ------------------------------------------------------------------ administración
 
-  async crear(dto: CrearAreaDto, admin: AdminActual) {
+  async crear(dto: CrearAreaDto, admin?: AdminActual) {
     const id = await this.prisma.$transaction(async (tx) => {
       await this.validar(tx, dto.nombre, dto.espacioId);
       const a = await tx.area_institucional.create({ data: this.datos(dto) as Prisma.area_institucionalUncheckedCreateInput });
-      await this.auditoria.registrar(tx, { usuarioId: admin.usuarioId, accion: 'crear', entidad: 'area_institucional', entidadId: a.id, detalle: { nombre: a.nombre } });
+      if (admin) await this.auditoria.registrar(tx, { usuarioId: admin.usuarioId, accion: 'crear', entidad: 'area_institucional', entidadId: a.id, detalle: { nombre: a.nombre } });
       return a.id;
     });
     this.invalidador.invalidar();
     return this.obtener(id);
   }
 
-  async actualizar(id: number, dto: ActualizarAreaDto, admin: AdminActual) {
+  async actualizar(id: number, dto: ActualizarAreaDto, admin?: AdminActual) {
     await this.prisma.$transaction(async (tx) => {
       if (!(await tx.area_institucional.findUnique({ where: { id }, select: { id: true } }))) {
         throw noEncontrado('AREA_NO_ENCONTRADA', 'No existe el área indicada.');
       }
       await this.validar(tx, dto.nombre, dto.espacioId, id);
       await tx.area_institucional.update({ where: { id }, data: this.datos(dto) });
-      await this.auditoria.registrar(tx, { usuarioId: admin.usuarioId, accion: 'editar', entidad: 'area_institucional', entidadId: id, detalle: { campos: Object.keys(dto) } });
+      if (admin) await this.auditoria.registrar(tx, { usuarioId: admin.usuarioId, accion: 'editar', entidad: 'area_institucional', entidadId: id, detalle: { campos: Object.keys(dto) } });
     });
     this.invalidador.invalidar();
     return this.obtener(id);
   }
 
-  async eliminar(id: number, admin: AdminActual): Promise<void> {
+  async eliminar(id: number, admin?: AdminActual): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const a = await tx.area_institucional.findUnique({
         where: { id },
@@ -120,7 +120,7 @@ export class AreasService {
       // Las carreras y las preguntas frecuentes asociadas quedan sin área (la base de datos las desvincula).
       await tx.area_institucional.delete({ where: { id } });
       await this.auditoria.registrar(tx, {
-        usuarioId: admin.usuarioId,
+        usuarioId: admin ? admin.usuarioId : null,
         accion: 'eliminar',
         entidad: 'area_institucional',
         entidadId: id,

@@ -124,7 +124,7 @@ export class SalasService {
 
   // ------------------------------------------------------------------ administración
 
-  async crear(dto: CrearSalaDto, admin: AdminActual) {
+  async crear(dto: CrearSalaDto, admin?: AdminActual) {
     const id = await this.prisma.$transaction(async (tx) => {
       await this.validarReferencias(tx, dto.pisoId, dto.tipoEspacioId);
       await this.validarUnicos(tx, dto.pisoId, dto.codigo, dto.svgElementId ?? null);
@@ -142,14 +142,14 @@ export class SalasService {
           equipamiento_rel: { create: equipamiento },
         },
       });
-      await this.auditoria.registrar(tx, { usuarioId: admin.usuarioId, accion: 'crear', entidad: 'espacio', entidadId: e.id, detalle: { codigo: e.codigo, pisoId: e.piso_id } });
+      if (admin) await this.auditoria.registrar(tx, { usuarioId: admin.usuarioId, accion: 'crear', entidad: 'espacio', entidadId: e.id, detalle: { codigo: e.codigo, pisoId: e.piso_id } });
       return e.id;
     });
     this.invalidador.invalidar();
     return this.obtener(id, true);
   }
 
-  async actualizar(id: number, dto: ActualizarSalaDto, admin: AdminActual) {
+  async actualizar(id: number, dto: ActualizarSalaDto, admin?: AdminActual) {
     await this.prisma.$transaction(async (tx) => {
       const actual = await tx.espacio.findUnique({ where: { id } });
       if (!actual) throw noEncontrado('SALA_NO_ENCONTRADA', 'No existe la sala indicada.');
@@ -178,13 +178,13 @@ export class SalasService {
         await tx.equipamiento.deleteMany({ where: { espacio_id: id } });
         await tx.equipamiento.createMany({ data: equipamiento.map((q) => ({ ...q, espacio_id: id })) });
       }
-      await this.auditoria.registrar(tx, { usuarioId: admin.usuarioId, accion: 'editar', entidad: 'espacio', entidadId: id, detalle: { campos: Object.keys(dto) } });
+      if (admin) await this.auditoria.registrar(tx, { usuarioId: admin.usuarioId, accion: 'editar', entidad: 'espacio', entidadId: id, detalle: { campos: Object.keys(dto) } });
     });
     this.invalidador.invalidar();
     return this.obtener(id, true);
   }
 
-  async eliminar(id: number, admin: AdminActual): Promise<void> {
+  async eliminar(id: number, admin?: AdminActual): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const e = await tx.espacio.findUnique({ where: { id }, include: { area_rel: { select: { id: true, nombre: true } }, _count: { select: { totem_rel: true } } } });
       if (!e) throw noEncontrado('SALA_NO_ENCONTRADA', 'No existe la sala indicada.');
@@ -195,7 +195,7 @@ export class SalasService {
         });
       }
       await tx.espacio.delete({ where: { id } });
-      await this.auditoria.registrar(tx, { usuarioId: admin.usuarioId, accion: 'eliminar', entidad: 'espacio', entidadId: id, detalle: { codigo: e.codigo, pisoId: e.piso_id } });
+      if (admin) await this.auditoria.registrar(tx, { usuarioId: admin.usuarioId, accion: 'eliminar', entidad: 'espacio', entidadId: id, detalle: { codigo: e.codigo, pisoId: e.piso_id } });
     });
     this.invalidador.invalidar();
   }

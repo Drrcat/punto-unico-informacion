@@ -10,7 +10,11 @@ import { Entorno } from './config/entorno';
  * Rutas que se atienden sin el prefijo /api: la aplicación de escritorio todavía llama a /faqs.
  * Las mismas rutas existen también como /api/faq.
  */
-const RUTAS_SIN_PREFIJO = ['faqs', 'faqs/{*ruta}'];
+const RUTAS_SIN_PREFIJO = [
+  'faqs', 'faqs/{*ruta}',
+  'salas', 'salas/{*ruta}',
+  'areas', 'areas/{*ruta}',
+];
 
 /** Configuración común del backend, compartida entre el arranque real y las pruebas. */
 export function configurarApp(app: INestApplication, entorno: Entorno): void {

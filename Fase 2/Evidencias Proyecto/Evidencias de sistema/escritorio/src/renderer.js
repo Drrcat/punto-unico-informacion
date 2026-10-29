@@ -21,8 +21,9 @@ const ENTITY_CONFIG = {
     fields: [
       { name: 'name', label: 'Nombre de la sala', placeholder: 'Ej. Laboratorio de informática 1', required: true, full: true },
       { name: 'code', label: 'Código o número', placeholder: 'Ej. LAB-101', required: true },
-      { name: 'floor', label: 'Piso', placeholder: 'Ej. 1', required: true },
-      { name: 'location', label: 'Referencia / ubicación', placeholder: 'Ej. Ala norte, junto a biblioteca', required: true, full: true }
+      { name: 'floor', label: 'Piso', required: true, select: true },
+      { name: 'typeId', label: 'Tipo de espacio', required: true, select: true },
+      { name: 'location', label: 'Referencia / ubicación', placeholder: 'Ej. Ala norte, junto a biblioteca', full: true }
     ],
     columns: [
       { label: 'Sala', key: 'name', primary: true, sub: 'code', subPrefix: 'Código: ' },
@@ -118,6 +119,12 @@ let faqCategories = [];
 let faqLoading = false;
 let faqLoaded = false;
 let faqError = '';
+let roomsLoaded = false;
+let areasLoaded = false;
+let infrastructureLoading = false;
+let roomFloors = [];
+let roomTypes = [];
+let roomSpaces = [];
 let enrollmentStatusFilter = 'all';
 let enrollmentDateFilter = '7';
 let selectedEnrollmentId = 'enrollment-2';
@@ -166,12 +173,71 @@ async function apiRequest(path, options = {}) {
       ...options.headers
     }
   });
-  const result = await response.json();
+  const result = response.status === 204 ? null : await response.json();
   if (!response.ok) {
     const message = Array.isArray(result.message) ? result.message.join('. ') : result.message;
     throw new Error(message || `La API respondió con el estado ${response.status}.`);
   }
   return result;
+}
+
+async function loadInfrastructure() {
+    if (infrastructureLoading) return;
+    infrastructureLoading = true;
+    roomsLoaded = false;
+    areasLoaded = false;
+    $('#apiStatus').textContent = 'Conectando…';
+    try {
+      const [roomsResponse, areasResponse, floors, types] = await Promise.all([
+        apiRequest('/salas?limite=100'),
+        apiRequest('/areas'),
+        apiRequest('/api/pisos'),
+        apiRequest('/salas/tipos')
+      ]);
+      const rooms = Array.isArray(roomsResponse) ? roomsResponse : roomsResponse.items;
+      if (!Array.isArray(rooms) || !Array.isArray(areasResponse) || !Array.isArray(floors) || !Array.isArray(types)) {
+        throw new Error('La API devolvió datos de Planos Sede con un formato inesperado.');
+      }
+      roomFloors = floors;
+      roomTypes = types;
+      roomSpaces = rooms;
+      data.rooms = rooms.map(room => ({
+        id: room.id,
+        name: room.nombre || room.codigo,
+        code: room.codigo,
+        floor: String(room.piso?.numero ?? room.piso?.id ?? ''),
+        pisoId: room.piso?.id,
+        typeId: room.tipo?.id,
+        location: room.piso?.nombre || ''
+      }));
+      data.areas = areasResponse.map(area => {
+        const ubicacion = area.ubicacion;
+        const location = ubicacion
+          ? [ubicacion.edificio?.nombre, ubicacion.piso ? `Piso ${ubicacion.piso.numero ?? ubicacion.piso}` : '', ubicacion.sala?.codigo ? `Sala ${ubicacion.sala.codigo}` : '']
+            .filter(Boolean).join(', ')
+          : '';
+        return {
+          id: area.id,
+          name: area.nombre,
+          description: area.descripcion || '',
+          location,
+          espacioId: ubicacion?.sala?.id ?? null,
+          phone: area.contacto?.anexo || '',
+          email: area.contacto?.correo || '',
+          schedule: area.horarioAtencion || ''
+        };
+      });
+      roomsLoaded = true;
+      areasLoaded = true;
+      $('#apiStatus').textContent = 'Conectada';
+    } catch (error) {
+      console.error('No fue posible cargar salas y áreas desde Planos Sede.', error);
+      $('#apiStatus').textContent = 'Desconectada';
+      showToast(error instanceof Error ? error.message : 'No fue posible conectar con Planos Sede.', true);
+    } finally {
+      infrastructureLoading = false;
+      renderApp();
+    }
 }
 
 async function loadFaqs() {
@@ -258,6 +324,7 @@ function handleLogin(event) {
   activeSection = 'overview';
   renderApp();
   if (!faqLoaded && !faqLoading) void loadFaqs();
+  if (!roomsLoaded && !infrastructureLoading) void loadInfrastructure();
 }
 
 function logout() {
@@ -274,6 +341,7 @@ function navigate(section) {
   searchQuery = '';
   renderApp();
   if (section === 'faqs' && !faqLoaded && !faqLoading) void loadFaqs();
+  if ((section === 'rooms' || section === 'areas') && !roomsLoaded && !infrastructureLoading) void loadInfrastructure();
 }
 
 function renderApp() {
@@ -497,6 +565,10 @@ function openModal(entity, id = null) {
     showToast(faqError || 'La conexión con la API todavía está cargando.', true);
     return;
   }
+  if ((entity === 'rooms' && !roomsLoaded) || (entity === 'areas' && !areasLoaded)) {
+    showToast('La conexión con Planos Sede todavía está cargando.', true);
+    return;
+  }
   if (entity === 'faqs' && faqCategories.length === 0) {
     showToast('La API no tiene categorías disponibles para asociar a una pregunta.', true);
     return;
@@ -510,13 +582,23 @@ function openModal(entity, id = null) {
       ? existing?.categoryId ?? ''
       : field.name === 'published'
         ? existing?.published ?? false
+        : field.name === 'floor'
+          ? existing?.pisoId ?? ''
+          : field.name === 'typeId'
+            ? existing?.typeId ?? ''
+          : field.name === 'location' && entity === 'areas'
+            ? existing?.espacioId ?? ''
         : existing?.[field.name] ?? '';
     const required = field.required ? 'required' : '';
     const placeholder = escapeHTML(field.placeholder || '');
     const options = field.name === 'category_id'
       ? faqCategories.map(category => ({ value: String(category.id), label: category.nombre }))
       : field.name === 'location'
-        ? DEMO_AREA_SPACES
+        ? roomSpaces.map(room => ({ value: String(room.id), label: `${room.codigo}${room.nombre ? ` - ${room.nombre}` : ''}` }))
+        : field.name === 'floor'
+          ? roomFloors.map(floor => ({ value: String(floor.id), label: `Piso ${floor.numero} - ${floor.nombre}` }))
+          : field.name === 'typeId'
+            ? roomTypes.map(type => ({ value: String(type.id), label: type.nombre }))
       : field.options;
     const control = field.select
       ? `<select class="field-control" id="field-${field.name}" name="${field.name}" ${required}><option value="">${escapeHTML(field.emptyOption || 'Selecciona una opción')}</option>${(options || []).map(option => `<option value="${escapeHTML(option.value)}" ${String(value) === String(option.value) ? 'selected' : ''}>${escapeHTML(option.label)}</option>`).join('')}</select>`
@@ -529,7 +611,9 @@ function openModal(entity, id = null) {
     ? 'Los cambios se guardarán en la base de datos.'
     : entity === 'areas'
       ? 'Completa los campos para actualizar el directorio de áreas del tótem.'
-    : 'Completa los campos para actualizar los datos de demostración.';
+    : entity === 'rooms'
+      ? 'Los cambios se guardarán en la base de datos de Planos Sede.'
+      : 'Completa los campos para actualizar los datos de demostración.';
   $('#modalRoot').innerHTML = `<div class="modal-backdrop" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-header"><div><h2 id="modalTitle">${title}</h2><p>${description}</p></div><button type="button" class="modal-close" data-modal-action="close" aria-label="Cerrar ventana">×</button></div><form id="entityForm" class="modal-form" data-entity="${entity}"><div class="form-grid">${fields}</div><div class="modal-actions"><button type="button" class="button secondary" data-modal-action="close">Cancelar</button><button type="submit" class="button primary">${existing ? 'Guardar cambios' : 'Crear registro'}</button></div></form></section></div>`;
   const firstInput = $('.field-control', $('#modalRoot'));
   if (firstInput) firstInput.focus();
@@ -599,6 +683,61 @@ async function handleModalSubmit(event) {
     }
     return;
   }
+  if (entity === 'rooms') {
+    const wasEditing = editingId !== null;
+    const payload = {
+      pisoId: Number(record.floor),
+      tipoEspacioId: Number(record.typeId),
+      codigo: record.code,
+      nombre: record.name || null,
+      activo: true
+    };
+    const submitButton = $('button[type="submit"]', form);
+    submitButton.disabled = true;
+    try {
+      await apiRequest(editingId ? `/salas/${editingId}` : '/salas', {
+        method: editingId ? 'PATCH' : 'POST',
+        body: JSON.stringify(payload)
+      });
+      closeModal();
+      roomsLoaded = false;
+      await loadInfrastructure();
+      showToast(wasEditing ? 'Sala actualizada en Planos Sede.' : 'Sala creada en Planos Sede.');
+    } catch (error) {
+      console.error('No fue posible guardar la sala en la API.', error);
+      showToast(error instanceof Error ? error.message : 'No fue posible guardar la sala.', true);
+      submitButton.disabled = false;
+    }
+    return;
+  }
+  if (entity === 'areas') {
+    const wasEditing = editingId !== null;
+    const payload = {
+      nombre: record.name,
+      descripcion: record.description || null,
+      espacioId: record.location ? Number(record.location) : null,
+      correoContacto: record.email || null,
+      anexo: record.phone || null,
+      horarioAtencion: record.schedule || null
+    };
+    const submitButton = $('button[type="submit"]', form);
+    submitButton.disabled = true;
+    try {
+      await apiRequest(editingId ? `/areas/${editingId}` : '/areas', {
+        method: editingId ? 'PATCH' : 'POST',
+        body: JSON.stringify(payload)
+      });
+      closeModal();
+      areasLoaded = false;
+      await loadInfrastructure();
+      showToast(wasEditing ? 'Área actualizada en Planos Sede.' : 'Área creada en Planos Sede.');
+    } catch (error) {
+      console.error('No fue posible guardar el área en la API.', error);
+      showToast(error instanceof Error ? error.message : 'No fue posible guardar el área.', true);
+      submitButton.disabled = false;
+    }
+    return;
+  }
   const existingIndex = data[entity].findIndex(item => item.id === editingId);
   const wasEditing = existingIndex >= 0;
   if (wasEditing) data[entity][existingIndex] = { ...data[entity][existingIndex], ...record };
@@ -618,11 +757,34 @@ function deleteRecord(entity, id) {
     if (window.confirm(`¿Seguro que quieres eliminar «${label}» de la base de datos?`)) void deleteFaq(id);
     return;
   }
+  if (entity === 'rooms') {
+    if (!window.confirm(`¿Seguro que quieres eliminar «${label}» de Planos Sede?`)) return;
+    void deleteInfrastructureRecord('salas', id, 'Sala');
+    return;
+  }
+  if (entity === 'areas') {
+    if (!window.confirm(`¿Seguro que quieres eliminar «${label}» de Planos Sede?`)) return;
+    void deleteInfrastructureRecord('areas', id, 'Área');
+    return;
+  }
   if (!window.confirm(`¿Seguro que quieres eliminar «${label}» de los datos de demostración?`)) return;
   data[entity] = data[entity].filter(item => item.id !== id);
   const saved = saveData();
   renderApp();
   if (saved) showToast('Registro eliminado de los datos locales.');
+}
+
+async function deleteInfrastructureRecord(resource, id, singular) {
+  try {
+    await apiRequest(`/${resource}/${id}`, { method: 'DELETE' });
+    roomsLoaded = false;
+    areasLoaded = false;
+    await loadInfrastructure();
+    showToast(`${singular} eliminada en Planos Sede.`);
+  } catch (error) {
+    console.error(`No fue posible eliminar ${singular.toLowerCase()} desde la API.`, error);
+    showToast(error instanceof Error ? error.message : `No fue posible eliminar ${singular.toLowerCase()}.`, true);
+  }
 }
 
 async function deleteFaq(id) {

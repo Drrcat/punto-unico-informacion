@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Admin, AdminGuard, Permisos, SesionOpcionalGuard } from '../../common/auth/admin.guard';
@@ -12,16 +12,11 @@ import { SalasService } from './salas.service';
 @ApiTags('Infraestructura: salas')
 @Controller('salas')
 export class SalasController {
-  constructor(
-    private readonly salas: SalasService,
-    private readonly consultas: ConsultaService,
-  ) {}
+  constructor(private readonly salas: SalasService, private readonly consultas: ConsultaService) {}
 
   @Get('tipos')
   @ApiOperation({ summary: 'Catálogo de tipos de espacio (sala, baño, escalera, etc.).' })
-  tipos() {
-    return this.salas.tipos();
-  }
+  tipos() { return this.salas.tipos(); }
 
   @Get()
   @UseGuards(SesionOpcionalGuard)
@@ -30,22 +25,15 @@ export class SalasController {
   async listar(@Query() q: ListarSalasDto, @Admin() admin: AdminActual | undefined) {
     if (q.todas && !admin) throw noAutorizado('NO_AUTENTICADO', 'Ver todas las salas requiere iniciar sesión como administrador.');
     const r = await this.salas.listar({
-      q: q.q ?? undefined,
-      pisoId: q.pisoId,
-      tipoEspacioId: q.tipoEspacioId,
-      limite: q.limite ?? 20,
-      desplazamiento: q.desplazamiento ?? 0,
-      admin: !!q.todas && !!admin,
+      q: q.q ?? undefined, pisoId: q.pisoId, tipoEspacioId: q.tipoEspacioId,
+      limite: q.limite ?? 20, desplazamiento: q.desplazamiento ?? 0, admin: !!q.todas && !!admin,
     });
-    // Las búsquedas del tótem quedan registradas; las consultas de un administrador no cuentan como uso.
     if (q.q && !admin) await this.consultas.registrar({ tipo: 'SALA', termino: q.q, huboResultado: r.total > 0, espacioId: r.items[0]?.id ?? null });
     return r;
   }
 
   @Get(':id')
   @UseGuards(SesionOpcionalGuard)
-  @ApiOperation({ summary: 'Detalle de una sala: equipamiento, áreas que funcionan allí, piso y plano.' })
-  @ApiBearerAuth()
   obtener(@Param('id', ParseIntPipe) id: number, @Req() req: Request & { admin?: AdminActual }) {
     return this.salas.obtener(id, !!req.admin);
   }
@@ -53,17 +41,11 @@ export class SalasController {
   @Post()
   @UseGuards(AdminGuard)
   @Permisos(PERMISOS.SALA_CREAR)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Crea una sala (administrador).' })
-  crear(@Body() dto: CrearSalaDto, @Admin() admin: AdminActual) {
-    return this.salas.crear(dto, admin);
-  }
+  crear(@Body() dto: CrearSalaDto, @Admin() admin: AdminActual) { return this.salas.crear(dto, admin); }
 
   @Put(':id')
   @UseGuards(AdminGuard)
   @Permisos(PERMISOS.SALA_EDITAR)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Edita una sala (administrador). Solo cambia los campos enviados.' })
   actualizar(@Param('id', ParseIntPipe) id: number, @Body() dto: ActualizarSalaDto, @Admin() admin: AdminActual) {
     return this.salas.actualizar(id, dto, admin);
   }
@@ -72,9 +54,44 @@ export class SalasController {
   @HttpCode(204)
   @UseGuards(AdminGuard)
   @Permisos(PERMISOS.SALA_ELIMINAR)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Elimina una sala (administrador). Falla si un área o un tótem la usa.' })
   async eliminar(@Param('id', ParseIntPipe) id: number, @Admin() admin: AdminActual): Promise<void> {
     await this.salas.eliminar(id, admin);
   }
+}
+
+/** Compatibilidad sin prefijo /api para la aplicación de escritorio. */
+@Controller('salas')
+export class SalasEscritorioController {
+  constructor(private readonly salas: SalasService) {}
+
+  @Get('tipos')
+  tipos() { return this.salas.tipos(); }
+
+  @Get()
+  listar(@Query() q: ListarSalasDto) {
+    return this.salas.listar({
+      q: q.q ?? undefined, pisoId: q.pisoId, tipoEspacioId: q.tipoEspacioId,
+      limite: q.limite ?? 100, desplazamiento: q.desplazamiento ?? 0, admin: true,
+    });
+  }
+
+  @Get(':id')
+  obtener(@Param('id', ParseIntPipe) id: number) { return this.salas.obtener(id, true); }
+
+  @Post()
+  crear(@Body() dto: CrearSalaDto) { return this.salas.crear(dto, undefined); }
+
+  @Put(':id')
+  actualizar(@Param('id', ParseIntPipe) id: number, @Body() dto: ActualizarSalaDto) {
+    return this.salas.actualizar(id, dto, undefined);
+  }
+
+  @Patch(':id')
+  actualizarParcial(@Param('id', ParseIntPipe) id: number, @Body() dto: ActualizarSalaDto) {
+    return this.salas.actualizar(id, dto, undefined);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  eliminar(@Param('id', ParseIntPipe) id: number) { return this.salas.eliminar(id, undefined); }
 }
