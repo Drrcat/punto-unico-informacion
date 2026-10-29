@@ -1,1 +1,0 @@
-{"version":3,"file":"configurar-app.js","sourceRoot":"","sources":["../src/configurar-app.ts"],"names":[],"mappings":";;AAIA,sCAeC;AAnBD,2CAAkE;AAIlE,SAAgB,aAAa,CAAC,GAAqB;IAEjD,GAAG,CAAC,UAAU,EAAE,CAAC;IAMjB,GAAG,CAAC,cAAc,CAChB,IAAI,uBAAc,CAAC;QACjB,SAAS,EAAE,IAAI;QACf,oBAAoB,EAAE,IAAI;QAC1B,gBAAgB,EAAE,IAAI;KACvB,CAAC,CACH,CAAC;AACJ,CAAC"}

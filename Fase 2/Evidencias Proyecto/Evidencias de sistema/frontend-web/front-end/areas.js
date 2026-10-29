@@ -19,13 +19,12 @@ pedirApi("/areas")
   });
 
 // Arma el texto de ubicación: "Sala A-101 · Piso 1 · Edificio A"
-function textoUbicacion(espacio) {
-  if (!espacio) return "Consulta en el mesón de informaciones";
-  const partes = [espacio.nombre ? `${espacio.nombre} (${espacio.codigo})` : `Sala ${espacio.codigo}`];
-  if (espacio.piso) {
-    partes.push(espacio.piso.nombre || `Piso ${espacio.piso.numero}`);
-    if (espacio.piso.edificio) partes.push(espacio.piso.edificio.nombre);
-  }
+function textoUbicacion(ubicacion) {
+  if (!ubicacion) return "Consulta en el mesón de informaciones";
+  const { sala, piso, edificio } = ubicacion;
+  const partes = [sala.nombre ? `${sala.nombre} (${sala.codigo})` : `Sala ${sala.codigo}`];
+  if (piso) partes.push(piso.nombre || `Piso ${piso.numero}`);
+  if (edificio) partes.push(edificio.nombre);
   return partes.join(" · ");
 }
 
@@ -57,10 +56,10 @@ function mostrarAreas(lista) {
       </button>
       <div class="tarjeta-detalle">
         <div class="datos">
-          ${dato("📍", "Dónde está", textoUbicacion(area.espacio))}
-          ${dato("🕘", "Horario de atención", area.horario_atencion)}
-          ${dato("✉️", "Correo", area.correo_contacto)}
-          ${dato("☎️", "Anexo", area.anexo)}
+          ${dato("📍", "Dónde está", textoUbicacion(area.ubicacion))}
+          ${dato("🕘", "Horario de atención", area.horarioAtencion)}
+          ${dato("✉️", "Correo", area.contacto?.correo)}
+          ${dato("☎️", "Anexo", area.contacto?.anexo)}
         </div>
       </div>
     </div>

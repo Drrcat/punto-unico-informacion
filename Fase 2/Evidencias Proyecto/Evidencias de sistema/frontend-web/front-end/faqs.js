@@ -8,7 +8,7 @@ let faqs = [];
 
 // 3. Cargamos las preguntas publicadas desde la API
 mostrarMensaje(listaFaqs, "Cargando preguntas...");
-pedirApi("/faqs")
+pedirApi("/faq")
   .then(datos => {
     faqs = datos;
     mostrarFaqs(faqs);
