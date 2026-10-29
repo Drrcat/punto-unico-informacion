@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Salas y espacios · Punto Único</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="barra-superior">
+    <div class="marca">
+      <span class="logo">PU</span>
+      <div>
+        <strong>Punto Único de Información</strong>
+        <small>Tótem de orientación estudiantil</small>
+      </div>
+    </div>
+    <a class="boton-volver" href="index.html">‹ Inicio</a>
+  </header>
+
+  <section class="titulo">
+    <h1>Salas y espacios</h1>
+    <p>Busca una sala, un baño o un ascensor y míralo en el mapa</p>
+  </section>
+
+  <main class="contenedor">
+    <input type="search" id="buscador" class="buscador" placeholder="🔍  Escribe un código o un nombre (ej: 201, baño...)" autocomplete="off">
+
+    <div id="filtro-pisos" class="filtros" aria-label="Filtrar por piso"></div>
+    <div id="filtro-tipos" class="filtros" aria-label="Filtrar por tipo de espacio"></div>
+
+    <p id="contador" class="contador" aria-live="polite"></p>
+    <div id="lista-salas">
+      <!-- Aquí aparecerán los espacios automáticamente -->
+    </div>
+  </main>
+
+  <footer class="pie">
+    <p>Punto Único de Información · Tótem de orientación estudiantil</p>
+  </footer>
+
+  <script src="comun.js"></script>
+  <script src="salas.js"></script>
+  <script src="totem.js"></script>
+
+</body>
+</html>

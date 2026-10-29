@@ -3,19 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mapa y Salas · Punto Único</title>
+  <title>Mapa de la sede · Punto Único</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="pagina-mapa">
 
   <!-- Barra delgada para volver al menú; el mapa trae su propio encabezado -->
   <header class="barra-superior barra-mapa">
-    <a class="boton-volver" href="index.html">← Volver al inicio</a>
+    <a class="boton-volver" href="index.html">‹ Inicio</a>
+    <a class="boton-volver" href="salas.html">Lista de salas</a>
   </header>
 
-  <!-- Mapa interactivo de Patricia, usado tal cual. ?marco=0 oculta su marco y ocupa todo el espacio.
-       No se carga totem.js aquí: el mapa maneja su propia inactividad dentro del iframe. -->
-  <iframe class="mapa-marco" src="OrientaSede_Mapa_Piso2y3_v2.html?marco=0" title="Mapa de la sede"></iframe>
+  <!-- Mapa interactivo de Patricia (mapa-totem.html), usado tal cual. La dirección se arma en el script de abajo. -->
+  <iframe id="mapa" class="mapa-marco" title="Mapa de la sede"></iframe>
+
+  <script src="comun.js"></script>
+  <script>
+    // Parámetros para el mapa de Patricia:
+    //   marco=0     oculta su marco y ocupa todo el espacio
+    //   sala, piso  marcan un espacio (vienen de "Ver en el mapa" en salas, áreas y trámites)
+    //   api         solo si esta web no la entrega el backend (por ejemplo Live Server en el puerto 5500)
+    const mapa = document.getElementById("mapa");
+    const recibidos = new URLSearchParams(location.search);
+    const parametros = new URLSearchParams({ marco: "0" });
+    ["sala", "piso"].forEach(nombre => {
+      if (recibidos.get(nombre)) parametros.set(nombre, recibidos.get(nombre));
+    });
+    const servidorApi = API_URL.replace(/\/api$/, "");
+    if (servidorApi !== location.origin) parametros.set("api", servidorApi);
+    mapa.src = `mapa-totem.html?${parametros}`;
+
+    // El mapa está en un iframe: lo que se toca dentro no llega a esta página. Se reenvía para que
+    // totem.js no vuelva al inicio mientras alguien está usando el mapa.
+    mapa.addEventListener("load", () => {
+      ["pointerdown", "keydown", "input", "wheel", "touchmove"].forEach(evento =>
+        mapa.contentDocument.addEventListener(evento, () => document.dispatchEvent(new Event(evento)), { passive: true })
+      );
+    });
+  </script>
+  <script src="totem.js"></script>
 
 </body>
 </html>

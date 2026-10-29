@@ -335,3 +335,116 @@ body.pagina-mapa { height: 100vh; overflow: hidden; }
 .barra-mapa { padding: 10px 16px; flex-shrink: 0; }
 .barra-mapa .boton-volver { margin-left: 0; min-height: 52px; }
 .mapa-marco { flex: 1; width: 100%; height: 100%; border: 0; display: block; }
+.barra-mapa .boton-volver + .boton-volver { margin-left: auto; }
+
+/* Botón "Ver en el mapa" (salas, áreas y trámites) */
+.boton-mapa {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 56px;
+  padding: 0 20px;
+  margin-top: 16px;
+  border-radius: 14px;
+  background: var(--azul);
+  color: var(--blanco);
+  font-size: 18px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.boton-mapa:active { background: var(--azul-oscuro); }
+
+/* ===== Salas y espacios ===== */
+.filtros { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.filtro {
+  min-height: 52px;
+  padding: 0 20px;
+  border: 1px solid #dfe4ee;
+  border-radius: 999px;
+  background: var(--blanco);
+  color: #48536b;
+  font-size: 17px;
+  font-weight: 700;
+}
+.filtro.activo { background: var(--azul); border-color: var(--azul); color: var(--blanco); }
+.filtros + .contador { margin-top: 8px; }
+
+.fila-sala { display: flex; align-items: center; gap: 16px; padding: 20px 24px; }
+.fila-sala strong { display: block; font-size: 21px; letter-spacing: -0.02em; }
+.fila-sala small { display: block; color: var(--apagado); font-size: 16px; margin-top: 4px; }
+.fila-sala .boton-mapa { margin: 0 0 0 auto; }
+
+/* ===== Enrolamiento facial ===== */
+.etapas { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+.etapas li {
+  text-align: center;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--blanco);
+  border: 1px solid var(--linea);
+  color: var(--apagado);
+  font-size: 16px;
+  font-weight: 700;
+}
+.etapas li.activa { background: var(--azul); border-color: var(--azul); color: var(--blanco); }
+
+.panel {
+  display: grid;
+  gap: 14px;
+  background: var(--blanco);
+  border: 1px solid var(--linea);
+  border-radius: 20px;
+  box-shadow: var(--sombra);
+  padding: 28px;
+  font-size: 19px;
+}
+.panel .nota { margin-top: 0; }
+.panel .buscador { margin-bottom: 0; }
+.panel .boton-secundario { margin-bottom: 0; justify-self: start; }
+.panel.centrado { text-align: center; justify-items: center; }
+.panel h2 { font-size: 30px; letter-spacing: -0.03em; }
+#aviso { margin-bottom: 18px; padding: 20px; }
+
+.campo-codigo { font-size: 36px; letter-spacing: 0.4em; text-align: center; }
+
+.boton-principal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 68px;
+  padding: 0 28px;
+  border: none;
+  border-radius: 16px;
+  background: var(--azul);
+  color: var(--blanco);
+  font-size: 21px;
+  font-weight: 750;
+  text-decoration: none;
+  box-shadow: 0 5px 12px rgba(49, 93, 232, 0.2);
+}
+.boton-principal:active { background: var(--azul-oscuro); }
+.boton-principal:disabled { opacity: 0.6; }
+
+.camara {
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--azul-noche);
+  aspect-ratio: 4 / 3;
+}
+.camara video, .camara img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.camara video { transform: scaleX(-1); }   /* como un espejo, más natural para quien se mira */
+.acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+.acciones .boton-principal { flex: 1; }
+
+.icono-listo {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--verde);
+  color: var(--blanco);
+  font-size: 52px;
+  font-weight: 800;
+}
