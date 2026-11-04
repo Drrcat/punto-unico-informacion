@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Admin, AdminGuard, Permisos, SesionOpcionalGuard } from '../../common/auth/admin.guard';
@@ -57,41 +57,4 @@ export class SalasController {
   async eliminar(@Param('id', ParseIntPipe) id: number, @Admin() admin: AdminActual): Promise<void> {
     await this.salas.eliminar(id, admin);
   }
-}
-
-/** Compatibilidad sin prefijo /api para la aplicación de escritorio. */
-@Controller('salas')
-export class SalasEscritorioController {
-  constructor(private readonly salas: SalasService) {}
-
-  @Get('tipos')
-  tipos() { return this.salas.tipos(); }
-
-  @Get()
-  listar(@Query() q: ListarSalasDto) {
-    return this.salas.listar({
-      q: q.q ?? undefined, pisoId: q.pisoId, tipoEspacioId: q.tipoEspacioId,
-      limite: q.limite ?? 100, desplazamiento: q.desplazamiento ?? 0, admin: true,
-    });
-  }
-
-  @Get(':id')
-  obtener(@Param('id', ParseIntPipe) id: number) { return this.salas.obtener(id, true); }
-
-  @Post()
-  crear(@Body() dto: CrearSalaDto) { return this.salas.crear(dto, undefined); }
-
-  @Put(':id')
-  actualizar(@Param('id', ParseIntPipe) id: number, @Body() dto: ActualizarSalaDto) {
-    return this.salas.actualizar(id, dto, undefined);
-  }
-
-  @Patch(':id')
-  actualizarParcial(@Param('id', ParseIntPipe) id: number, @Body() dto: ActualizarSalaDto) {
-    return this.salas.actualizar(id, dto, undefined);
-  }
-
-  @Delete(':id')
-  @HttpCode(204)
-  eliminar(@Param('id', ParseIntPipe) id: number) { return this.salas.eliminar(id, undefined); }
 }

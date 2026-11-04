@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Admin, AdminGuard, Permisos } from '../../common/auth/admin.guard';
 import { PERMISOS } from '../../common/auth/permisos';
@@ -42,33 +42,4 @@ export class AreasController {
   async eliminar(@Param('id', ParseIntPipe) id: number, @Admin() admin: AdminActual): Promise<void> {
     await this.areas.eliminar(id, admin);
   }
-}
-
-/** Compatibilidad sin prefijo /api para la aplicación de escritorio. */
-@Controller('areas')
-export class AreasEscritorioController {
-  constructor(private readonly areas: AreasService) {}
-
-  @Get()
-  listar(@Query() q: ListarAreasDto) { return this.areas.listar(q.q ?? undefined); }
-
-  @Get(':id')
-  obtener(@Param('id', ParseIntPipe) id: number) { return this.areas.obtener(id); }
-
-  @Post()
-  crear(@Body() dto: CrearAreaDto) { return this.areas.crear(dto, undefined); }
-
-  @Put(':id')
-  actualizar(@Param('id', ParseIntPipe) id: number, @Body() dto: ActualizarAreaDto) {
-    return this.areas.actualizar(id, dto, undefined);
-  }
-
-  @Patch(':id')
-  actualizarParcial(@Param('id', ParseIntPipe) id: number, @Body() dto: ActualizarAreaDto) {
-    return this.areas.actualizar(id, dto, undefined);
-  }
-
-  @Delete(':id')
-  @HttpCode(204)
-  eliminar(@Param('id', ParseIntPipe) id: number) { return this.areas.eliminar(id, undefined); }
 }

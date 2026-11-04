@@ -189,10 +189,10 @@ async function loadInfrastructure() {
     $('#apiStatus').textContent = 'Conectando…';
     try {
       const [roomsResponse, areasResponse, floors, types] = await Promise.all([
-        apiRequest('/salas?limite=100'),
-        apiRequest('/areas'),
+        apiRequest('/api/salas?limite=100'),
+        apiRequest('/api/areas'),
         apiRequest('/api/pisos'),
-        apiRequest('/salas/tipos')
+        apiRequest('/api/salas/tipos')
       ]);
       const rooms = Array.isArray(roomsResponse) ? roomsResponse : roomsResponse.items;
       if (!Array.isArray(rooms) || !Array.isArray(areasResponse) || !Array.isArray(floors) || !Array.isArray(types)) {
@@ -669,7 +669,7 @@ async function handleModalSubmit(event) {
     submitButton.disabled = true;
     try {
       await apiRequest(editingId ? `/faqs/${editingId}` : '/faqs', {
-        method: editingId ? 'PATCH' : 'POST',
+        method: editingId ? 'PUT' : 'POST',
         body: JSON.stringify(payload)
       });
       closeModal();
@@ -695,8 +695,8 @@ async function handleModalSubmit(event) {
     const submitButton = $('button[type="submit"]', form);
     submitButton.disabled = true;
     try {
-      await apiRequest(editingId ? `/salas/${editingId}` : '/salas', {
-        method: editingId ? 'PATCH' : 'POST',
+      await apiRequest(editingId ? `/api/salas/${editingId}` : '/api/salas', {
+        method: editingId ? 'PUT' : 'POST',
         body: JSON.stringify(payload)
       });
       closeModal();
@@ -723,7 +723,7 @@ async function handleModalSubmit(event) {
     const submitButton = $('button[type="submit"]', form);
     submitButton.disabled = true;
     try {
-      await apiRequest(editingId ? `/areas/${editingId}` : '/areas', {
+      await apiRequest(editingId ? `/api/areas/${editingId}` : '/api/areas', {
         method: editingId ? 'PATCH' : 'POST',
         body: JSON.stringify(payload)
       });
@@ -776,7 +776,7 @@ function deleteRecord(entity, id) {
 
 async function deleteInfrastructureRecord(resource, id, singular) {
   try {
-    await apiRequest(`/${resource}/${id}`, { method: 'DELETE' });
+    await apiRequest(`/api/${resource}/${id}`, { method: 'DELETE' });
     roomsLoaded = false;
     areasLoaded = false;
     await loadInfrastructure();
