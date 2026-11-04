@@ -189,10 +189,10 @@ async function loadInfrastructure() {
     $('#apiStatus').textContent = 'Conectando…';
     try {
       const [roomsResponse, areasResponse, floors, types] = await Promise.all([
-        apiRequest('/api/salas?limite=100'),
-        apiRequest('/api/areas'),
+        apiRequest('/salas?limite=100'),
+        apiRequest('/areas'),
         apiRequest('/api/pisos'),
-        apiRequest('/api/salas/tipos')
+        apiRequest('/salas/tipos')
       ]);
       const rooms = Array.isArray(roomsResponse) ? roomsResponse : roomsResponse.items;
       if (!Array.isArray(rooms) || !Array.isArray(areasResponse) || !Array.isArray(floors) || !Array.isArray(types)) {
