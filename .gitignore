@@ -3,3 +3,6 @@
 **/.env
 *.tsbuildinfo
 .DS_Store
+
+# Copias que crea iCloud Drive o el Finder al haber conflictos ("archivo 2.js")
+* 2.*
