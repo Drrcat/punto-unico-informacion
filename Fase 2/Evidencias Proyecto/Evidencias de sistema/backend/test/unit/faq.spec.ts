@@ -28,6 +28,27 @@ describe('FaqService', () => {
     expect(tabla.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { publicada: true }, orderBy: { id: 'asc' } }));
   });
 
+  it('entrega la ubicación del área responsable para el botón "Ver en el mapa"', async () => {
+    const espacio = {
+      id: 77, codigo: 'SD', nombre: 'Servicios Digitales', svg_element_id: 'P3-T1-SD',
+      piso: { id: 2, numero: 3, nombre: 'Piso 3', plano_svg_ruta: 'p3.svg', edificio: { id: 1, nombre: 'Edificio principal' } },
+    };
+    tabla.findMany.mockResolvedValue([
+      { ...faqEjemplo, area: { nombre: 'Servicios Digitales', espacio } },
+      { ...faqEjemplo, id: 2, area: { nombre: 'Finanzas', espacio: null } },
+    ]);
+    const [conLugar, sinLugar] = await servicio.listar();
+    expect(conLugar.area).toEqual({
+      nombre: 'Servicios Digitales',
+      ubicacion: {
+        sala: { id: 77, codigo: 'SD', nombre: 'Servicios Digitales', svgElementId: 'P3-T1-SD' },
+        piso: { id: 2, numero: 3, nombre: 'Piso 3', planoUrl: '/api/pisos/2/plano' },
+        edificio: { id: 1, nombre: 'Edificio principal' },
+      },
+    });
+    expect(sinLugar.area).toEqual({ nombre: 'Finanzas', ubicacion: null });
+  });
+
   it('listarAdmin incluye los borradores', async () => {
     tabla.findMany.mockResolvedValue([]);
     await servicio.listarAdmin();

@@ -18,16 +18,6 @@ pedirApi("/areas")
     mostrarMensaje(listaAreas, "No pudimos cargar las áreas. Intenta nuevamente en un momento.", true);
   });
 
-// Arma el texto de ubicación: "Sala A-101 · Piso 1 · Edificio A"
-function textoUbicacion(ubicacion) {
-  if (!ubicacion) return "Consulta en el mesón de informaciones";
-  const { sala, piso, edificio } = ubicacion;
-  const partes = [sala.nombre ? `${sala.nombre} (${sala.codigo})` : `Sala ${sala.codigo}`];
-  if (piso) partes.push(piso.nombre || `Piso ${piso.numero}`);
-  if (edificio) partes.push(edificio.nombre);
-  return partes.join(" · ");
-}
-
 // Una fila de dato (icono, título y valor). Si no hay valor, no se muestra.
 function dato(icono, titulo, valor) {
   if (!valor) return "";

@@ -1,6 +1,7 @@
 'use strict';
 
-const STORAGE_KEY = 'pui-desktop-demo-v1';
+// Clave de los antiguos datos de demostración: se borra al iniciar para no dejar restos en el equipo.
+const LEGACY_DEMO_KEY = 'pui-desktop-demo-v1';
 const API_BASE_URL = 'http://localhost:3000';
 
 const SECTION_META = {
@@ -65,21 +66,6 @@ const ENTITY_CONFIG = {
   }
 };
 
-const DEMO_DATA = {
-  rooms: [
-    { id: 'room-1', name: 'Laboratorio de informática 1', code: 'LAB-101', floor: '1', location: 'Edificio principal, ala norte' },
-    { id: 'room-2', name: 'Sala de clases 204', code: 'S-204', floor: '2', location: 'Edificio principal, pasillo central' },
-    { id: 'room-3', name: 'Biblioteca', code: 'BIB-01', floor: '1', location: 'Acceso central, junto al patio' }
-  ],
-  areas: [
-    { id: 'area-1', name: 'Financiamiento', description: 'Becas, créditos y pagos de aranceles', location: 'Piso 1, oficina 105', email: 'financiamiento@ejemplo.cl', phone: '210', schedule: 'Lunes a viernes, 9:00 a 17:00' },
-    { id: 'area-2', name: 'Servicios Digitales', description: 'Soporte y servicios digitales', location: 'Piso 2, oficina 210', email: 'soporte@ejemplo.cl', phone: '215', schedule: 'Lunes a viernes, 8:30 a 18:00' },
-    { id: 'area-3', name: 'CASE', description: 'Centro de apoyo y servicios estudiantiles', location: 'Piso 1, oficina 112', email: 'case@ejemplo.cl', phone: '220', schedule: 'Lunes a viernes, 9:00 a 17:00' },
-    { id: 'area-4', name: 'Dirección de Carrera', description: 'Orientación académica y de carrera', location: 'Piso 3, oficina 301', email: 'direccion.carrera@ejemplo.cl', phone: '230', schedule: 'Lunes a jueves, 10:00 a 16:00' }
-  ],
-  faqs: []
-};
-
 // Estados que entrega GET /api/enrolamiento/solicitudes. `css` reutiliza las clases de enrollments.css.
 const ENROLLMENT_STATUS = {
   VERIFICACION_PENDIENTE: { label: 'Verificando correo', css: 'started' },
@@ -115,14 +101,8 @@ function setAdminToken(token) {
   }
 }
 
-const DEMO_AREA_SPACES = [
-  { value: 'Piso 1, oficina 105', label: 'Piso 1, oficina 105' },
-  { value: 'Piso 2, oficina 210', label: 'Piso 2, oficina 210' },
-  { value: 'Piso 1, oficina 112', label: 'Piso 1, oficina 112' },
-  { value: 'Piso 3, oficina 301', label: 'Piso 3, oficina 301' }
-];
-
-let data = loadData();
+// Todo sale de la API: hasta que responde, las listas quedan vacías y se muestra "Cargando…".
+let data = { rooms: [], areas: [], faqs: [] };
 let activeSection = 'overview';
 let searchQuery = '';
 let editingId = null;
@@ -134,6 +114,7 @@ let faqError = '';
 let roomsLoaded = false;
 let areasLoaded = false;
 let infrastructureLoading = false;
+let infrastructureError = '';
 let roomFloors = [];
 let roomTypes = [];
 let roomSpaces = [];
@@ -150,39 +131,6 @@ const ENROLLMENT_PAGE_SIZE = 100;
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-
-function loadData() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed && Array.isArray(parsed.rooms)) {
-        return {
-          rooms: parsed.rooms,
-          areas: Array.isArray(parsed.areas) ? parsed.areas : JSON.parse(JSON.stringify(DEMO_DATA.areas)),
-          faqs: []
-        };
-      }
-    }
-  } catch (error) {
-    console.warn('No fue posible leer los datos locales de demostración.', error);
-  }
-  return JSON.parse(JSON.stringify(DEMO_DATA));
-}
-
-function saveData() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      rooms: data.rooms,
-      areas: data.areas
-    }));
-    return true;
-  } catch (error) {
-    console.error('No fue posible guardar los datos locales.', error);
-    showToast('No se pudieron guardar los cambios en este equipo.', true);
-    return false;
-  }
-}
 
 async function apiRequest(path, options = {}) {
   const { skipSessionCheck = false, ...fetchOptions } = options;
@@ -232,9 +180,11 @@ async function fetchAllRooms() {
 async function loadInfrastructure() {
     if (infrastructureLoading) return;
     infrastructureLoading = true;
+    infrastructureError = '';
     roomsLoaded = false;
     areasLoaded = false;
     $('#apiStatus').textContent = 'Conectando…';
+    if (activeSection === 'rooms' || activeSection === 'areas') renderEntitySection(activeSection);
     try {
       const [rooms, areasResponse, floors, types] = await Promise.all([
         fetchAllRooms(),
@@ -279,9 +229,14 @@ async function loadInfrastructure() {
       areasLoaded = true;
       $('#apiStatus').textContent = 'Conectada';
     } catch (error) {
-      console.error('No fue posible cargar salas y áreas desde Planos Sede.', error);
+      console.error('No fue posible cargar salas y áreas desde la API.', error);
+      // No se dejan datos anteriores a la vista: la lista queda vacía con el error y un botón para reintentar.
+      data.rooms = [];
+      data.areas = [];
+      infrastructureError = error instanceof TypeError
+        ? 'No fue posible conectar con el servidor. Verifica que el backend esté en ejecución.'
+        : (error instanceof Error && error.message) || 'No fue posible cargar los datos.';
       $('#apiStatus').textContent = 'Desconectada';
-      showToast(error instanceof Error ? error.message : 'No fue posible conectar con Planos Sede.', true);
     } finally {
       infrastructureLoading = false;
       renderApp();
@@ -443,13 +398,9 @@ function getAreaLocation(area) {
   return area.location || '';
 }
 
-function makeId(prefix) {
-  if (window.crypto && typeof window.crypto.randomUUID === 'function') return `${prefix}-${window.crypto.randomUUID()}`;
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
 function init() {
   if (window.desktopApp?.runtime) $('#runtimeLabel').textContent = window.desktopApp.runtime;
+  try { localStorage.removeItem(LEGACY_DEMO_KEY); } catch (_) { /* Sin acceso al almacenamiento: no hay nada que limpiar. */ }
   $('#loginForm').addEventListener('submit', handleLogin);
   $('#logoutButton').addEventListener('click', logout);
   $$('.nav-item').forEach(button => button.addEventListener('click', () => navigate(button.dataset.section)));
@@ -554,6 +505,8 @@ function resetSession() {
   faqLoaded = false;
   roomsLoaded = false;
   areasLoaded = false;
+  infrastructureError = '';
+  data = { rooms: [], areas: [], faqs: [] };
   $('#appScreen').hidden = true;
   $('#loginScreen').hidden = false;
   $('#loginPassword').value = '';
@@ -574,9 +527,9 @@ function renderApp() {
   $('#topbarTitle').textContent = meta.title;
   $('#breadcrumb').textContent = meta.breadcrumb;
   $$('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.section === activeSection));
-  $('#roomNavCount').textContent = data.rooms.length;
-  $('#areaNavCount').textContent = data.areas.length;
-  $('#faqNavCount').textContent = data.faqs.length;
+  $('#roomNavCount').textContent = roomsLoaded ? data.rooms.length : '—';
+  $('#areaNavCount').textContent = areasLoaded ? data.areas.length : '—';
+  $('#faqNavCount').textContent = faqLoaded ? data.faqs.length : '—';
   $('#enrollmentNavCount').textContent = enrollmentsLoaded ? enrollmentsTotal : '—';
   if (activeSection === 'overview') renderOverview();
   else if (activeSection === 'enrollments') renderEnrollmentSection();
@@ -661,16 +614,16 @@ function handleContentChange(event) {
 
 function renderOverview() {
   const modules = [
-    { section: 'rooms', icon: '⌂', title: 'Gestión de salas', subtitle: 'Espacios y ubicaciones del campus', count: data.rooms.length },
-    { section: 'areas', icon: '⌖', title: 'Áreas', subtitle: 'Directorio y ubicación de atención', count: data.areas.length },
-    { section: 'faqs', icon: '?', title: 'Preguntas frecuentes', subtitle: 'Respuestas para consultas habituales', count: data.faqs.length }
+    { section: 'rooms', icon: '⌂', title: 'Gestión de salas', subtitle: 'Espacios y ubicaciones del campus', count: roomsLoaded ? data.rooms.length : '—' },
+    { section: 'areas', icon: '⌖', title: 'Áreas', subtitle: 'Directorio y ubicación de atención', count: areasLoaded ? data.areas.length : '—' },
+    { section: 'faqs', icon: '?', title: 'Preguntas frecuentes', subtitle: 'Respuestas para consultas habituales', count: faqLoaded ? data.faqs.length : '—' }
   ];
   $('#appContent').innerHTML = `
     <div class="page-heading"><div><p class="eyebrow">VISTA GENERAL</p><h1>¡Bienvenido al panel!</h1><p>Administra los contenidos que verá la comunidad estudiantil en el tótem.</p></div><div class="heading-actions"><button class="button primary" data-action="create" data-entity="rooms">＋ Agregar sala</button></div></div>
     <div class="kpi-grid">
-      ${kpiCard('Salas registradas', data.rooms.length, '⌂', 'Espacios del campus')}
-      ${kpiCard('Áreas', data.areas.length, '⌖', 'Puntos de atención')}
-      ${kpiCard('Preguntas frecuentes', data.faqs.length, '?', 'Respuestas disponibles')}
+      ${kpiCard('Salas registradas', roomsLoaded ? data.rooms.length : '—', '⌂', 'Espacios del campus')}
+      ${kpiCard('Áreas', areasLoaded ? data.areas.length : '—', '⌖', 'Puntos de atención')}
+      ${kpiCard('Preguntas frecuentes', faqLoaded ? data.faqs.length : '—', '?', 'Respuestas disponibles')}
       ${kpiCard('Módulos', '3', '▦', 'Secciones administrables')}
     </div>
     <div class="dashboard-grid">
@@ -713,13 +666,22 @@ function renderEntitySection(entity) {
     <div class="page-heading"><div><p class="eyebrow">GESTIÓN DE CONTENIDO</p><h1>${config.title.charAt(0).toUpperCase()}${config.title.slice(1)}</h1><p>${config.description}</p></div><div class="heading-actions">${headerActions}</div></div>
     <div class="toolbar"><label class="search-box"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" value="${escapeHTML(searchQuery)}" placeholder="Buscar ${config.plural}…" aria-label="Buscar ${config.plural}"></label><span class="result-count">${filtered.length} de ${list.length} registros</span></div>
     <div class="table-wrap"><table class="data-table"><thead><tr>${config.columns.map(column => `<th>${column.label}</th>`).join('')}<th style="text-align:right">ACCIONES</th></tr></thead><tbody>${renderTableRows(entity, filtered, config)}</tbody></table></div>
-    ${faqLoading ? '<p class="muted" role="status">Cargando preguntas frecuentes…</p>' : ''}
-    ${faqError ? `<p class="form-error" role="alert">${escapeHTML(faqError)}</p>` : ''}
     ${callout}
   `;
 }
 
 function renderTableRows(entity, rows, config) {
+  const colspan = config.columns.length + 1;
+  const isInfrastructure = entity === 'rooms' || entity === 'areas';
+  const loading = isInfrastructure ? infrastructureLoading : faqLoading;
+  const loadError = isInfrastructure ? infrastructureError : faqError;
+  if (rows.length === 0 && loading) {
+    return `<tr><td class="empty-state" colspan="${colspan}"><strong>Cargando ${config.plural}…</strong><span>Consultando la base de datos.</span></td></tr>`;
+  }
+  if (rows.length === 0 && loadError) {
+    const retry = isInfrastructure ? 'retry-infrastructure' : 'retry-faqs';
+    return `<tr><td class="empty-state" colspan="${colspan}"><strong>No se pudieron cargar las ${config.plural}</strong><span>${escapeHTML(loadError)}</span><br><br><button class="button primary" data-action="${retry}">Reintentar</button></td></tr>`;
+  }
   if (rows.length === 0) {
     const searching = searchQuery.trim().length > 0;
     return `<tr><td class="empty-state" colspan="${config.columns.length + 1}"><strong>${searching ? 'No se encontraron resultados' : config.emptyTitle}</strong><span>${searching ? 'Prueba con otro término de búsqueda.' : config.emptyText}</span></td></tr>`;
@@ -754,6 +716,8 @@ function handleContentClick(event) {
   if (!button) return;
   const { action, entity, id, section } = button.dataset;
   if (action === 'navigate') navigate(section);
+  if (action === 'retry-infrastructure') void loadInfrastructure();
+  if (action === 'retry-faqs') void loadFaqs();
   if (action === 'refresh-enrollments') {
     void loadEnrollments().then(loaded => { if (loaded) showToast('Solicitudes actualizadas desde la base de datos.'); });
   }
@@ -962,14 +926,6 @@ async function handleModalSubmit(event) {
     }
     return;
   }
-  const existingIndex = data[entity].findIndex(item => item.id === editingId);
-  const wasEditing = existingIndex >= 0;
-  if (wasEditing) data[entity][existingIndex] = { ...data[entity][existingIndex], ...record };
-  else data[entity].unshift({ id: makeId(entity.slice(0, -1)), ...record });
-  const saved = saveData();
-  closeModal();
-  renderApp();
-  if (saved) showToast(wasEditing ? 'Cambios guardados en este equipo.' : 'Registro agregado correctamente.');
 }
 
 function deleteRecord(entity, id) {
@@ -982,20 +938,14 @@ function deleteRecord(entity, id) {
     return;
   }
   if (entity === 'rooms') {
-    if (!window.confirm(`¿Seguro que quieres eliminar «${label}» de Planos Sede?`)) return;
+    if (!window.confirm(`¿Seguro que quieres eliminar «${label}» de la base de datos?`)) return;
     void deleteInfrastructureRecord('salas', id, 'Sala');
     return;
   }
   if (entity === 'areas') {
-    if (!window.confirm(`¿Seguro que quieres eliminar «${label}» de Planos Sede?`)) return;
+    if (!window.confirm(`¿Seguro que quieres eliminar «${label}» de la base de datos?`)) return;
     void deleteInfrastructureRecord('areas', id, 'Área');
-    return;
   }
-  if (!window.confirm(`¿Seguro que quieres eliminar «${label}» de los datos de demostración?`)) return;
-  data[entity] = data[entity].filter(item => item.id !== id);
-  const saved = saveData();
-  renderApp();
-  if (saved) showToast('Registro eliminado de los datos locales.');
 }
 
 async function deleteInfrastructureRecord(resource, id, singular) {

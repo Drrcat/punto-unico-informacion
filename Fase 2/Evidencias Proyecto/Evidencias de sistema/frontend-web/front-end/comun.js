@@ -49,6 +49,16 @@ function botonMapa(ubicacion) {
   return `<a class="boton-mapa" href="${urlMapa(ubicacion.sala.svgElementId, ubicacion.piso?.numero)}">🗺️ Ver en el mapa</a>`;
 }
 
+// Arma el texto de ubicación: "Sala A-101 · Piso 1 · Edificio A". Lo usan "¿Dónde debo ir?" y las preguntas frecuentes.
+function textoUbicacion(ubicacion) {
+  if (!ubicacion) return "Consulta en el mesón de informaciones";
+  const { sala, piso, edificio } = ubicacion;
+  const partes = [sala.nombre ? `${sala.nombre} (${sala.codigo})` : `Sala ${sala.codigo}`];
+  if (piso) partes.push(piso.nombre || `Piso ${piso.numero}`);
+  if (edificio) partes.push(edificio.nombre);
+  return partes.join(" · ");
+}
+
 // Evita que el texto que viene de la base se interprete como HTML
 function escapar(texto) {
   const div = document.createElement("div");

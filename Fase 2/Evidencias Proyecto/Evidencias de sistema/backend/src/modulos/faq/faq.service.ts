@@ -1,16 +1,24 @@
 import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { incluirUbicacion, vistaUbicacion } from '../../common/util/vistas';
 import { ActualizarFaqDto, CrearFaqDto } from './faq.dto';
 
-/** Campos que el tótem muestra de cada pregunta. */
+/** Campos que el tótem muestra de cada pregunta. El área trae su espacio para el botón "Ver en el mapa". */
 const camposPublicos = {
   id: true,
   pregunta: true,
   respuesta: true,
   categoria: { select: { nombre: true } },
-  area: { select: { nombre: true } },
+  area: { select: { nombre: true, espacio: { include: incluirUbicacion } } },
 } satisfies Prisma.pregunta_frecuenteSelect;
+
+type FaqPublica = Prisma.pregunta_frecuenteGetPayload<{ select: typeof camposPublicos }>;
+
+/** El área se entrega con la misma `ubicacion` que /api/areas: { sala, piso, edificio } o null. */
+function vistaPublica({ area, ...faq }: FaqPublica) {
+  return { ...faq, area: area && { nombre: area.nombre, ubicacion: area.espacio ? vistaUbicacion(area.espacio) : null } };
+}
 
 /** Preguntas frecuentes: lectura pública para el tótem y administración desde la aplicación de escritorio. */
 @Injectable()
@@ -18,12 +26,13 @@ export class FaqService {
   constructor(private readonly prisma: PrismaService) {}
 
   /** Solo las publicadas, para el tótem. */
-  listar() {
-    return this.prisma.pregunta_frecuente.findMany({
+  async listar() {
+    const faqs = await this.prisma.pregunta_frecuente.findMany({
       where: { publicada: true },
       orderBy: { id: 'asc' },
       select: camposPublicos,
     });
+    return faqs.map(vistaPublica);
   }
 
   /** Todas, incluidos los borradores, para la aplicación de escritorio. */
@@ -55,7 +64,7 @@ export class FaqService {
       select: camposPublicos,
     });
     if (!faq) throw new NotFoundException(`No existe la pregunta ${id}`);
-    return faq;
+    return vistaPublica(faq);
   }
 
   crear(datos: CrearFaqDto) {

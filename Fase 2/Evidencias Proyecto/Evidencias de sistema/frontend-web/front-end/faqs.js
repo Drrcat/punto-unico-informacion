@@ -37,16 +37,18 @@ function mostrarFaqs(lista) {
       <div class="tarjeta-detalle">
         ${escapar(faq.respuesta)}
         ${faq.area ? `<p class="nota">Área responsable: ${escapar(faq.area.nombre)}</p>` : ""}
+        ${faq.area?.ubicacion ? `<p class="nota">📍 ${escapar(textoUbicacion(faq.area.ubicacion))}</p>` : ""}
+        ${botonMapa(faq.area?.ubicacion)}
       </div>
     </div>
   `).join("");
 }
 
-// 5. Buscador en vivo: filtra por pregunta, respuesta o categoría
+// 5. Buscador en vivo: filtra por pregunta, respuesta, categoría o área responsable
 buscador.addEventListener("input", () => {
   const texto = normalizar(buscador.value.trim());
   const filtradas = faqs.filter(faq =>
-    normalizar(`${faq.pregunta} ${faq.respuesta} ${faq.categoria?.nombre}`).includes(texto)
+    normalizar([faq.pregunta, faq.respuesta, faq.categoria?.nombre, faq.area?.nombre].filter(Boolean).join(" ")).includes(texto)
   );
   mostrarFaqs(filtradas);
 });
