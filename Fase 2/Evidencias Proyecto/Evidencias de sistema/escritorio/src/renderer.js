@@ -2,8 +2,6 @@
 
 const STORAGE_KEY = 'pui-desktop-demo-v1';
 const API_BASE_URL = 'http://localhost:3000';
-const DEMO_EMAIL = 'admin@demo.local';
-const DEMO_PASSWORD = 'demo1234';
 
 const SECTION_META = {
   overview: { title: 'Resumen', breadcrumb: 'PANEL ADMINISTRATIVO' },
@@ -82,26 +80,40 @@ const DEMO_DATA = {
   faqs: []
 };
 
-const ENROLLMENT_DEMO_DATA = [
-  { id: 'enrollment-1', daysAgo: 0, time: '10:32', email: 'm.rojas@ejemplo.cl', status: 'completed', failedCodes: 0, detail: 'Fotografía enviada al sistema', emailVerification: 'Verificada a las 10:12', photoValidation: 'Rostro válido', error: '—' },
-  { id: 'enrollment-2', daysAgo: 0, time: '10:12', email: 'c.soto@ejemplo.cl', status: 'failed', failedCodes: 0, detail: 'Servicio de enrolamiento no disponible', emailVerification: 'Verificada a las 10:12', photoValidation: 'Rostro válido', error: 'Sistema de enrolamiento: sin respuesta (10:13)' },
-  { id: 'enrollment-3', daysAgo: 1, time: '09:47', email: 'a.vega@ejemplo.cl', status: 'photo_pending', failedCodes: 1, detail: 'Correo verificado, falta la fotografía', emailVerification: 'Verificada a las 09:41', photoValidation: 'Fotografía pendiente', error: 'Código incorrecto (09:45)' },
-  { id: 'enrollment-4', daysAgo: 1, time: '16:20', email: 'p.mena@ejemplo.cl', status: 'cancelled', failedCodes: 3, detail: 'Código vencido o con demasiados intentos', emailVerification: 'No completada', photoValidation: 'No iniciada', error: 'Límite de intentos alcanzado (16:20)' },
-  { id: 'enrollment-5', daysAgo: 2, time: '15:05', email: 'l.diaz@ejemplo.cl', status: 'completed', failedCodes: 0, detail: 'Fotografía enviada al sistema', emailVerification: 'Verificada a las 14:52', photoValidation: 'Rostro válido', error: '—' },
-  { id: 'enrollment-6', daysAgo: 8, time: '11:18', email: 'j.perez@ejemplo.cl', status: 'started', failedCodes: 0, detail: 'Solicitud iniciada, pendiente de verificación', emailVerification: 'Pendiente', photoValidation: 'No iniciada', error: '—' },
-  { id: 'enrollment-7', daysAgo: 9, time: '13:42', email: 'f.gomez@ejemplo.cl', status: 'completed', failedCodes: 0, detail: 'Fotografía enviada al sistema', emailVerification: 'Verificada a las 13:30', photoValidation: 'Rostro válido', error: '—' },
-  { id: 'enrollment-8', daysAgo: 10, time: '09:26', email: 'd.torres@ejemplo.cl', status: 'failed', failedCodes: 1, detail: 'No fue posible validar la fotografía', emailVerification: 'Verificada a las 09:08', photoValidation: 'No se detectó un rostro', error: 'Validación de fotografía fallida (09:26)' },
-  { id: 'enrollment-9', daysAgo: 8, time: '12:10', email: 'v.silva@ejemplo.cl', status: 'photo_pending', failedCodes: 0, detail: 'Correo verificado, falta la fotografía', emailVerification: 'Verificada a las 12:02', photoValidation: 'Fotografía pendiente', error: '—' },
-  { id: 'enrollment-10', daysAgo: 12, time: '10:50', email: 'r.morales@ejemplo.cl', status: 'completed', failedCodes: 0, detail: 'Fotografía enviada al sistema', emailVerification: 'Verificada a las 10:38', photoValidation: 'Rostro válido', error: '—' },
-  { id: 'enrollment-11', daysAgo: 18, time: '14:34', email: 'e.castillo@ejemplo.cl', status: 'cancelled', failedCodes: 3, detail: 'Solicitud cancelada tras varios intentos', emailVerification: 'No completada', photoValidation: 'No iniciada', error: 'Límite de intentos alcanzado (14:34)' },
-  { id: 'enrollment-12', daysAgo: 25, time: '08:55', email: 'n.fuentes@ejemplo.cl', status: 'completed', failedCodes: 0, detail: 'Fotografía enviada al sistema', emailVerification: 'Verificada a las 08:41', photoValidation: 'Rostro válido', error: '—' }
-].map(enrollment => {
-  const createdAt = new Date();
-  createdAt.setDate(createdAt.getDate() - enrollment.daysAgo);
-  const [hours, minutes] = enrollment.time.split(':').map(Number);
-  createdAt.setHours(hours, minutes, 0, 0);
-  return { ...enrollment, createdAt };
-});
+// Estados que entrega GET /api/enrolamiento/solicitudes. `css` reutiliza las clases de enrollments.css.
+const ENROLLMENT_STATUS = {
+  VERIFICACION_PENDIENTE: { label: 'Verificando correo', css: 'started' },
+  VERIFICACION_EXPIRADA: { label: 'Código vencido', css: 'cancelled' },
+  VERIFICACION_RECHAZADA: { label: 'Código rechazado', css: 'failed' },
+  INICIADO: { label: 'Iniciado', css: 'started' },
+  FOTO_PENDIENTE: { label: 'Foto pendiente', css: 'photo_pending' },
+  COMPLETADO: { label: 'Completado', css: 'completed' },
+  FALLIDO: { label: 'Fallido', css: 'failed' },
+  CANCELADO: { label: 'Cancelado', css: 'cancelled' }
+};
+
+const ENROLLMENT_ERROR_SOURCE = {
+  CORREO: 'Envío del código por correo',
+  GOOGLE_VISION: 'Validación de la fotografía',
+  ENROLAMIENTO: 'Sistema de enrolamiento'
+};
+
+// Sesión del administrador: token entregado por POST /api/auth/login. Se borra al cerrar sesión o al vencer.
+const ADMIN_TOKEN_KEY = 'pui-desktop-admin-token';
+let sessionExpiredNotified = false;
+
+function getAdminToken() {
+  try { return localStorage.getItem(ADMIN_TOKEN_KEY) || ''; } catch (_) { return ''; }
+}
+
+function setAdminToken(token) {
+  try {
+    if (token) localStorage.setItem(ADMIN_TOKEN_KEY, token);
+    else localStorage.removeItem(ADMIN_TOKEN_KEY);
+  } catch (error) {
+    console.warn('No fue posible guardar el token de administrador en este equipo.', error);
+  }
+}
 
 const DEMO_AREA_SPACES = [
   { value: 'Piso 1, oficina 105', label: 'Piso 1, oficina 105' },
@@ -127,7 +139,14 @@ let roomTypes = [];
 let roomSpaces = [];
 let enrollmentStatusFilter = 'all';
 let enrollmentDateFilter = '7';
-let selectedEnrollmentId = 'enrollment-2';
+let selectedEnrollmentId = null;
+let enrollments = [];
+let enrollmentsTotal = 0;
+let enrollmentsLoading = false;
+let enrollmentsLoaded = false;
+let enrollmentsError = '';
+let enrollmentsRequest = 0;
+const ENROLLMENT_PAGE_SIZE = 100;
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -166,17 +185,31 @@ function saveData() {
 }
 
 async function apiRequest(path, options = {}) {
+  const { skipSessionCheck = false, ...fetchOptions } = options;
+  const token = getAdminToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
+    ...fetchOptions,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...fetchOptions.headers
     }
   });
-  const result = response.status === 204 ? null : await response.json();
+  let result = null;
+  if (response.status !== 204) {
+    const text = await response.text();
+    try { result = text ? JSON.parse(text) : null; } catch (_) { result = null; }
+  }
   if (!response.ok) {
-    const message = Array.isArray(result.message) ? result.message.join('. ') : result.message;
-    throw new Error(message || `La API respondió con el estado ${response.status}.`);
+    // El backend responde { statusCode, codigo, mensaje }; `message` queda por compatibilidad con Nest.
+    const raw = result?.mensaje ?? result?.message;
+    const message = Array.isArray(raw) ? raw.join('. ') : raw;
+    const error = new Error(message || `La API respondió con el estado ${response.status}.`);
+    error.status = response.status;
+    error.code = result?.codigo;
+    // Con una sesión abierta, un 401 significa que venció o fue cerrada: se vuelve al inicio de sesión.
+    if (response.status === 401 && token && !skipSessionCheck) handleSessionExpired();
+    throw error;
   }
   return result;
 }
@@ -280,6 +313,113 @@ async function loadFaqs() {
   }
 }
 
+async function loadEnrollments() {
+  if (!getAdminToken()) return false;
+  const request = ++enrollmentsRequest;
+  enrollmentsLoading = true;
+  enrollmentsError = '';
+  if (activeSection === 'enrollments') renderEnrollmentSection();
+
+  const params = new URLSearchParams({ limite: String(ENROLLMENT_PAGE_SIZE) });
+  if (enrollmentStatusFilter !== 'all') params.set('estado', enrollmentStatusFilter);
+  if (enrollmentDateFilter !== 'all') {
+    params.set('desde', new Date(Date.now() - Number(enrollmentDateFilter) * 24 * 60 * 60 * 1000).toISOString());
+  }
+
+  try {
+    const response = await apiRequest(`/api/enrolamiento/solicitudes?${params}`);
+    if (request !== enrollmentsRequest) return false; // Llegó una consulta más nueva (cambio de filtro).
+    if (!response || !Array.isArray(response.items)) {
+      throw new Error('La API devolvió las solicitudes de enrolamiento con un formato inesperado.');
+    }
+    enrollments = response.items.map(toEnrollmentView);
+    enrollmentsTotal = Number(response.total) || enrollments.length;
+    enrollmentsLoaded = true;
+    if (!enrollments.some(item => item.id === selectedEnrollmentId)) selectedEnrollmentId = enrollments[0]?.id ?? null;
+    return true;
+  } catch (error) {
+    if (request !== enrollmentsRequest) return false;
+    enrollments = [];
+    enrollmentsTotal = 0;
+    enrollmentsLoaded = false;
+    if (error.status === 403) {
+      enrollmentsError = error.message || 'Tu rol no tiene permiso para consultar las solicitudes de enrolamiento.';
+    } else {
+      enrollmentsError = error instanceof Error ? error.message : 'No fue posible conectar con la API.';
+    }
+    console.error('No fue posible cargar las solicitudes de enrolamiento desde la API.', error);
+    return false;
+  } finally {
+    if (request === enrollmentsRequest) {
+      enrollmentsLoading = false;
+      $('#enrollmentNavCount').textContent = enrollmentsLoaded ? enrollmentsTotal : '—';
+      if (activeSection === 'enrollments') renderEnrollmentSection();
+    }
+  }
+}
+
+function toEnrollmentView(item) {
+  const verification = item.verificacion || {};
+  const enrollment = item.enrolamiento || null;
+  const captures = enrollment?.capturas || [];
+  const errors = enrollment?.errores || [];
+  const lastCapture = captures[captures.length - 1];
+  const lastError = errors[errors.length - 1];
+  const failedCodes = Number(verification.codigosFallidos) || 0;
+
+  const emailVerification = ({
+    VERIFICADA: verification.resueltoEn ? `Verificado el ${formatEnrollmentDate(new Date(verification.resueltoEn))}` : 'Verificado',
+    PENDIENTE: item.estado === 'VERIFICACION_EXPIRADA' ? 'El código venció sin usarse' : 'Esperando el código de verificación',
+    EXPIRADA: 'El código venció sin usarse',
+    RECHAZADA: 'Rechazada por demasiados códigos incorrectos'
+  })[verification.estado] || '—';
+
+  let photoValidation = enrollment ? 'Fotografía pendiente' : 'No iniciada';
+  if (lastCapture) {
+    const confidence = lastCapture.confianza === null || lastCapture.confianza === undefined
+      ? ''
+      : ` (confianza ${Math.round(Number(lastCapture.confianza) * 100)} %)`;
+    photoValidation = lastCapture.rostroValido
+      ? `Rostro válido${confidence}`
+      : `Rechazada: ${lastCapture.motivoRechazo || 'sin motivo registrado'}`;
+    if (captures.length > 1) photoValidation += ` · ${captures.length} fotografías`;
+  }
+
+  const error = lastError
+    ? `${ENROLLMENT_ERROR_SOURCE[lastError.servicio] || lastError.servicio}: ${lastError.mensaje}${lastError.codigoHttp ? ` [HTTP ${lastError.codigoHttp}]` : ''} (${formatEnrollmentTime(lastError.creadoEn)})`
+    : '—';
+
+  const detail = ({
+    VERIFICACION_PENDIENTE: 'Esperando que ingrese el código enviado al correo',
+    VERIFICACION_EXPIRADA: 'El código venció antes de ser ingresado',
+    VERIFICACION_RECHAZADA: 'Demasiados códigos incorrectos',
+    INICIADO: 'Correo verificado, enrolamiento iniciado',
+    FOTO_PENDIENTE: 'Correo verificado, falta una fotografía válida',
+    COMPLETADO: 'Fotografía enviada al sistema de enrolamiento',
+    FALLIDO: lastError ? ENROLLMENT_ERROR_SOURCE[lastError.servicio] || 'Falló un servicio externo' : 'No fue posible completar el enrolamiento',
+    CANCELADO: 'Solicitud cancelada o abandonada'
+  })[item.estado] || '—';
+
+  return {
+    id: String(item.id),
+    createdAt: new Date(item.solicitadoEn),
+    email: item.correo,
+    status: item.estado,
+    totem: item.totem || '',
+    failedCodes,
+    detail,
+    emailVerification,
+    photoValidation,
+    imageDeleted: captures.length > 0 && captures.every(capture => capture.imagenEliminadaEn),
+    error
+  };
+}
+
+function formatEnrollmentTime(iso) {
+  if (!iso) return '';
+  return new Intl.DateTimeFormat('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso));
+}
+
 function escapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 }
@@ -306,19 +446,58 @@ function init() {
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') closeModal();
   });
+  void restoreSession();
 }
 
-function handleLogin(event) {
+/** Si quedó un token guardado y sigue vigente, entra directo al panel. */
+async function restoreSession() {
+  if (!getAdminToken()) return;
+  try {
+    const user = await apiRequest('/api/auth/sesion', { skipSessionCheck: true });
+    enterApp(user);
+  } catch (error) {
+    // Solo se descarta el token si la API lo rechazó; si el backend no responde se puede reintentar al ingresar.
+    if (error.status === 401) setAdminToken('');
+    else console.warn('No fue posible comprobar la sesión guardada.', error);
+  }
+}
+
+async function handleLogin(event) {
   event.preventDefault();
   const email = $('#loginEmail').value.trim().toLowerCase();
   const password = $('#loginPassword').value;
-  const error = $('#loginError');
-  if (email !== DEMO_EMAIL || password !== DEMO_PASSWORD) {
-    error.textContent = 'Credenciales incorrectas. Usa los datos de demostración indicados abajo.';
-    error.hidden = false;
-    return;
+  const errorBox = $('#loginError');
+  const submit = $('#loginSubmit');
+  errorBox.hidden = true;
+  submit.disabled = true;
+  setAdminToken('');
+  try {
+    const session = await apiRequest('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ correo: email, clave: password }),
+      skipSessionCheck: true
+    });
+    setAdminToken(session.token);
+    $('#loginPassword').value = '';
+    enterApp(session.usuario);
+  } catch (error) {
+    errorBox.textContent = error instanceof TypeError
+      ? 'No fue posible conectar con el servidor. Verifica que el backend esté en ejecución.'
+      : error.message || 'No fue posible iniciar sesión.';
+    errorBox.hidden = false;
+  } finally {
+    submit.disabled = false;
   }
-  error.hidden = true;
+}
+
+function enterApp(user) {
+  sessionExpiredNotified = false;
+  const fullName = [user?.nombres, user?.apellidos].filter(Boolean).join(' ') || 'Administrador';
+  const initials = fullName.split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase();
+  $('#userName').textContent = fullName;
+  $('#userEmail').textContent = user?.correo || 'Personal autorizado';
+  $('#userInitials').textContent = initials || 'AD';
+  $('#loginError').hidden = true;
   $('#loginScreen').hidden = true;
   $('#appScreen').hidden = false;
   activeSection = 'overview';
@@ -327,12 +506,42 @@ function handleLogin(event) {
   if (!roomsLoaded && !infrastructureLoading) void loadInfrastructure();
 }
 
-function logout() {
+function handleSessionExpired() {
+  if (sessionExpiredNotified || $('#appScreen').hidden) return;
+  sessionExpiredNotified = true;
+  resetSession();
+  const errorBox = $('#loginError');
+  errorBox.textContent = 'Tu sesión expiró o fue cerrada. Ingresa nuevamente.';
+  errorBox.hidden = false;
+}
+
+async function logout() {
+  if (getAdminToken()) {
+    try {
+      await apiRequest('/api/auth/logout', { method: 'POST', skipSessionCheck: true });
+    } catch (error) {
+      console.warn('No fue posible cerrar la sesión en el servidor; se cierra solo en este equipo.', error);
+    }
+  }
+  resetSession();
+  $('#loginError').hidden = true;
+}
+
+/** Olvida la sesión y los datos cargados con ella, y vuelve a la pantalla de ingreso. */
+function resetSession() {
   closeModal();
+  setAdminToken('');
+  enrollments = [];
+  enrollmentsTotal = 0;
+  enrollmentsLoaded = false;
+  enrollmentsError = '';
+  selectedEnrollmentId = null;
+  faqLoaded = false;
+  roomsLoaded = false;
+  areasLoaded = false;
   $('#appScreen').hidden = true;
   $('#loginScreen').hidden = false;
   $('#loginPassword').value = '';
-  $('#loginError').hidden = true;
 }
 
 function navigate(section) {
@@ -342,6 +551,7 @@ function navigate(section) {
   renderApp();
   if (section === 'faqs' && !faqLoaded && !faqLoading) void loadFaqs();
   if ((section === 'rooms' || section === 'areas') && !roomsLoaded && !infrastructureLoading) void loadInfrastructure();
+  if (section === 'enrollments' && !enrollmentsLoaded && !enrollmentsLoading) void loadEnrollments();
 }
 
 function renderApp() {
@@ -352,70 +562,70 @@ function renderApp() {
   $('#roomNavCount').textContent = data.rooms.length;
   $('#areaNavCount').textContent = data.areas.length;
   $('#faqNavCount').textContent = data.faqs.length;
-  $('#enrollmentNavCount').textContent = ENROLLMENT_DEMO_DATA.length;
+  $('#enrollmentNavCount').textContent = enrollmentsLoaded ? enrollmentsTotal : '—';
   if (activeSection === 'overview') renderOverview();
   else if (activeSection === 'enrollments') renderEnrollmentSection();
   else renderEntitySection(activeSection);
 }
 
 function renderEnrollmentSection() {
-  const now = new Date();
-  const cutoff = enrollmentDateFilter === 'all'
-    ? null
-    : new Date(now.getTime() - Number(enrollmentDateFilter) * 24 * 60 * 60 * 1000);
-  const filtered = ENROLLMENT_DEMO_DATA.filter(enrollment =>
-    (enrollmentStatusFilter === 'all' || enrollment.status === enrollmentStatusFilter)
-    && (!cutoff || enrollment.createdAt >= cutoff)
-  );
-  const selected = filtered.find(enrollment => enrollment.id === selectedEnrollmentId) || filtered[0];
-  const rows = filtered.map(enrollment => `
-    <tr class="enrollment-row ${selected?.id === enrollment.id ? 'selected' : ''}" tabindex="0" role="button" aria-pressed="${selected?.id === enrollment.id}" data-enrollment-id="${enrollment.id}">
+  const heading = (actions) => `
+    <div class="page-heading enrollment-heading">
+      <div><p class="eyebrow">SEGUIMIENTO</p><h1>Solicitudes de enrolamiento</h1><p>Consulta el estado de cada enrolamiento y detecta fallas. Esta vista es de solo lectura.</p></div>
+      <div class="heading-actions">${actions}</div>
+    </div>`;
+
+  const selected = enrollments.find(enrollment => enrollment.id === selectedEnrollmentId) || enrollments[0];
+  const rows = enrollments.map(enrollment => {
+    const status = ENROLLMENT_STATUS[enrollment.status] || { label: enrollment.status, css: 'started' };
+    return `
+    <tr class="enrollment-row ${selected?.id === enrollment.id ? 'selected' : ''}" tabindex="0" role="button" aria-pressed="${selected?.id === enrollment.id}" data-enrollment-id="${escapeHTML(enrollment.id)}">
       <td>${formatEnrollmentDate(enrollment.createdAt)}</td>
       <td>${escapeHTML(enrollment.email)}</td>
-      <td><span class="enrollment-status ${enrollment.status}">${enrollmentStatusLabel(enrollment.status)}</span></td>
+      <td><span class="enrollment-status ${status.css}">${escapeHTML(status.label)}</span></td>
       <td>${enrollment.failedCodes}</td>
       <td>${escapeHTML(enrollment.detail)}</td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
   const detail = selected ? `
     <section class="enrollment-detail" aria-label="Detalle de la solicitud seleccionada">
       <h2>Detalle de la solicitud seleccionada</h2>
-      <p class="enrollment-detail-meta">${escapeHTML(selected.email)} · ${formatEnrollmentDate(selected.createdAt)}</p>
+      <p class="enrollment-detail-meta">${escapeHTML(selected.email)} · ${formatEnrollmentDate(selected.createdAt)}${selected.totem ? ` · ${escapeHTML(selected.totem)}` : ''}</p>
       <div class="enrollment-detail-grid">
         <div><strong>Verificación del correo</strong><span>${escapeHTML(selected.emailVerification)}</span></div>
-        <div><strong>Validación de la fotografía</strong><span>${escapeHTML(selected.photoValidation)}</span></div>
+        <div><strong>Validación de la fotografía</strong><span>${escapeHTML(selected.photoValidation)}${selected.imageDeleted ? '<br>Imagen ya eliminada del equipo' : ''}</span></div>
         <div class="${selected.error === '—' ? '' : 'has-error'}"><strong>Error registrado</strong><span>${escapeHTML(selected.error)}</span></div>
       </div>
     </section>
   ` : '';
 
+  let emptyRow = '<tr><td class="empty-state" colspan="5"><strong>No hay solicitudes para mostrar</strong><span>Prueba con otros filtros.</span></td></tr>';
+  if (enrollmentsLoading) emptyRow = '<tr><td class="empty-state" colspan="5"><strong>Cargando solicitudes…</strong><span>Consultando la base de datos.</span></td></tr>';
+  else if (enrollmentsError) emptyRow = `<tr><td class="empty-state" colspan="5"><strong>No se pudieron cargar las solicitudes</strong><span>${escapeHTML(enrollmentsError)}</span></td></tr>`;
+
+  const statusOptions = Object.entries(ENROLLMENT_STATUS)
+    .map(([value, status]) => `<option value="${value}">Estado: ${escapeHTML(status.label)}</option>`).join('');
+  const count = enrollmentsLoading
+    ? 'Cargando…'
+    : enrollmentsTotal > enrollments.length
+      ? `Mostrando ${enrollments.length} de ${enrollmentsTotal} registros`
+      : `${enrollments.length} registros`;
+
   $('#appContent').innerHTML = `
-    <div class="page-heading enrollment-heading">
-      <div><p class="eyebrow">SEGUIMIENTO</p><h1>Solicitudes de enrolamiento</h1><p>Consulta el estado de cada enrolamiento y detecta fallas. Esta vista es de solo lectura.</p></div>
-      <div class="heading-actions"><button class="button primary" data-action="refresh-enrollments">Actualizar</button></div>
-    </div>
+    ${heading('<button class="button primary" data-action="refresh-enrollments">Actualizar</button>')}
     <div class="enrollment-toolbar">
-      <label class="enrollment-filter"><span class="visually-hidden">Filtrar por estado</span><select id="enrollmentStatusFilter" class="field-control"><option value="all">Estado: Todos</option><option value="started">Estado: Iniciado</option><option value="photo_pending">Estado: Foto pendiente</option><option value="completed">Estado: Completado</option><option value="failed">Estado: Fallido</option><option value="cancelled">Estado: Cancelado</option></select></label>
+      <label class="enrollment-filter"><span class="visually-hidden">Filtrar por estado</span><select id="enrollmentStatusFilter" class="field-control"><option value="all">Estado: Todos</option>${statusOptions}</select></label>
       <label class="enrollment-filter"><span class="visually-hidden">Filtrar por fecha</span><select id="enrollmentDateFilter" class="field-control"><option value="7">Fecha: últimos 7 días</option><option value="30">Fecha: últimos 30 días</option><option value="90">Fecha: últimos 90 días</option><option value="all">Fecha: todas</option></select></label>
-      <span class="result-count">${filtered.length} de ${ENROLLMENT_DEMO_DATA.length} registros</span>
+      <span class="result-count">${count}</span>
     </div>
-    <div class="table-wrap enrollment-table-wrap"><table class="data-table enrollment-table"><thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Estado</th><th>Códigos fallidos</th><th>Detalle</th></tr></thead><tbody>${rows || '<tr><td class="empty-state" colspan="5"><strong>No hay solicitudes para mostrar</strong><span>Prueba con otros filtros.</span></td></tr>'}</tbody></table></div>
+    <div class="table-wrap enrollment-table-wrap"><table class="data-table enrollment-table"><thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Estado</th><th>Códigos fallidos</th><th>Detalle</th></tr></thead><tbody>${rows || emptyRow}</tbody></table></div>
     ${detail}
-    <p class="enrollment-demo-note">Datos locales de demostración. Las fotografías no se muestran.</p>
+    <p class="enrollment-demo-note">Datos de la base de datos. Las fotografías no se muestran ni se conservan: solo queda el resultado de su validación.</p>
   `;
   $('#enrollmentStatusFilter').value = enrollmentStatusFilter;
   $('#enrollmentDateFilter').value = enrollmentDateFilter;
 }
 
-function enrollmentStatusLabel(status) {
-  return ({
-    started: 'Iniciado',
-    photo_pending: 'Foto pendiente',
-    completed: 'Completado',
-    failed: 'Fallido',
-    cancelled: 'Cancelado'
-  })[status] || status;
-}
 
 function formatEnrollmentDate(date) {
   return new Intl.DateTimeFormat('es-CL', {
@@ -427,10 +637,10 @@ function formatEnrollmentDate(date) {
 function handleContentChange(event) {
   if (event.target.matches('#enrollmentStatusFilter')) {
     enrollmentStatusFilter = event.target.value;
-    renderEnrollmentSection();
+    void loadEnrollments();
   } else if (event.target.matches('#enrollmentDateFilter')) {
     enrollmentDateFilter = event.target.value;
-    renderEnrollmentSection();
+    void loadEnrollments();
   }
 }
 
@@ -458,7 +668,7 @@ function renderOverview() {
         ${quickAction('＋', 'Crear pregunta frecuente', 'Incorporar una respuesta útil', 'faqs')}
       </div></section>
     </div>
-    <div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Integración en desarrollo</strong>Las preguntas frecuentes se consultan y guardan en la API. Salas y áreas permanecen como datos locales de demostración; el acceso institucional todavía no está integrado.</div></div>
+    <div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Conectado a la API</strong>Los cambios se guardan en la base de datos con tu sesión de administrador y quedan visibles en el tótem.</div></div>
   `;
 }
 
@@ -530,8 +740,7 @@ function handleContentClick(event) {
   const { action, entity, id, section } = button.dataset;
   if (action === 'navigate') navigate(section);
   if (action === 'refresh-enrollments') {
-    renderEnrollmentSection();
-    showToast('Esta vista usa datos locales de demostración; no hay una fuente conectada para actualizar.', true);
+    void loadEnrollments().then(loaded => { if (loaded) showToast('Solicitudes actualizadas desde la base de datos.'); });
   }
   if (action === 'create') openModal(entity);
   if (action === 'edit') openModal(entity, id);

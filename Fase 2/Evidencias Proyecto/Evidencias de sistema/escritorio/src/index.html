@@ -18,17 +18,13 @@
       <p class="muted login-intro">Panel administrativo para gestionar la información que consulta el tótem estudiantil.</p>
       <form id="loginForm" class="login-form">
         <label for="loginEmail">Correo del personal</label>
-        <input id="loginEmail" name="email" type="email" autocomplete="username" placeholder="admin@demo.local" required>
+        <input id="loginEmail" name="email" type="email" autocomplete="username" placeholder="nombre@duocuc.cl" required>
         <label for="loginPassword">Contraseña</label>
         <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="Ingresa tu contraseña" required>
         <p id="loginError" class="form-error" role="alert" hidden></p>
-        <button class="button primary full-width" type="submit">Ingresar al panel <span aria-hidden="true">→</span></button>
+        <button id="loginSubmit" class="button primary full-width" type="submit">Ingresar al panel <span aria-hidden="true">→</span></button>
       </form>
-      <div class="demo-note">
-        <span class="demo-dot"></span>
-        <div><strong>Modo de demostración</strong><br><span>Correo: admin@demo.local · Clave: demo1234</span></div>
-      </div>
-      <p class="login-footnote">Este acceso de ejemplo no reemplaza la autenticación institucional real.</p>
+      <p class="login-footnote">Acceso exclusivo para el personal con rol de administrador. Tras varios intentos fallidos la cuenta se bloquea temporalmente.</p>
     </section>
     <aside class="login-aside">
       <div class="aside-orb orb-one"></div><div class="aside-orb orb-two"></div>
@@ -55,7 +51,7 @@
         <button class="nav-item" data-section="rooms"><span class="nav-icon">⌂</span>Salas <span class="nav-count" id="roomNavCount">0</span></button>
         <button class="nav-item" data-section="areas"><span class="nav-icon">⌖</span>Áreas <span class="nav-count" id="areaNavCount">0</span></button>
         <button class="nav-item" data-section="faqs"><span class="nav-icon">?</span>Preguntas frecuentes <span class="nav-count" id="faqNavCount">0</span></button>
-        <button class="nav-item" data-section="enrollments" aria-label="Solicitudes de enrolamiento"><span class="nav-icon">♧</span>Solicitudes de enrolamiento <span class="nav-count" id="enrollmentNavCount">12</span></button>
+        <button class="nav-item" data-section="enrollments" aria-label="Solicitudes de enrolamiento"><span class="nav-icon">♧</span>Solicitudes de enrolamiento <span class="nav-count" id="enrollmentNavCount">—</span></button>
       </nav>
       <div class="sidebar-bottom">
         <div class="environment-card"><span class="status-dot"></span><div><strong>API de preguntas</strong><small id="apiStatus">Sin conectar</small></div></div>
@@ -66,7 +62,7 @@
     <main class="main-area">
       <header class="topbar">
         <div><p class="eyebrow" id="breadcrumb">PANEL ADMINISTRATIVO</p><div class="topbar-title" id="topbarTitle">Resumen</div></div>
-        <div class="user-chip"><div class="avatar">AD</div><div><strong>Administrador demo</strong><small>Personal autorizado · prueba local</small></div><span class="chevron">⌄</span></div>
+        <div class="user-chip"><div class="avatar" id="userInitials">AD</div><div><strong id="userName">Administrador</strong><small id="userEmail">Personal autorizado</small></div><span class="chevron">⌄</span></div>
       </header>
       <section id="appContent" class="content-area" aria-live="polite"></section>
       <footer class="app-footer"><span>Punto Único de Información</span><span>Prototipo de escritorio · <span id="runtimeLabel">Electron</span></span></footer>

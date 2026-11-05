@@ -8,6 +8,7 @@ import { ENTORNO, Entorno } from './config/entorno';
 import { EntornoModule } from './config/entorno.module';
 import { IntegracionesModule } from './integraciones/integraciones.module';
 import { AreasModule } from './modulos/areas/areas.module';
+import { AuthLoginModule } from './modulos/auth/auth.module';
 import { EnrolamientoModule } from './modulos/enrolamiento/enrolamiento.module';
 import { FaqModule } from './modulos/faq/faq.module';
 import { PisosModule } from './modulos/pisos/pisos.module';
@@ -32,6 +33,7 @@ export class AppModule {
           }),
         }),
         ...(entorno.tareasActivas ? [ScheduleModule.forRoot()] : []),
+        AuthLoginModule,
         PisosModule,
         SalasModule,
         AreasModule,

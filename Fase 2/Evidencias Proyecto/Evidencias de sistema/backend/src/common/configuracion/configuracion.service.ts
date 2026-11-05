@@ -14,6 +14,9 @@ export const CONFIG_DEFECTO: Record<string, string> = {
   codigo_max_solicitudes: '3',
   codigo_ventana_min: '10',
   tiempo_inactividad_seg: '60',
+  login_max_intentos: '5',
+  login_bloqueo_min: '15',
+  sesion_admin_horas: '8',
 };
 
 const VIGENCIA_CACHE_MS = 15_000;
