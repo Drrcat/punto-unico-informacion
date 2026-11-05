@@ -214,6 +214,21 @@ async function apiRequest(path, options = {}) {
   return result;
 }
 
+/**
+ * Todas las salas, incluidas las inactivas (`todas=true`, solo administradores). La API entrega como
+ * máximo 100 por página, así que se recorren las páginas hasta completar el total.
+ */
+async function fetchAllRooms() {
+  const PAGE = 100;
+  const rooms = [];
+  for (let offset = 0; ; offset += PAGE) {
+    const page = await apiRequest(`/api/salas?todas=true&limite=${PAGE}&desplazamiento=${offset}`);
+    if (!page || !Array.isArray(page.items)) throw new Error('La API devolvió las salas con un formato inesperado.');
+    rooms.push(...page.items);
+    if (page.items.length < PAGE || rooms.length >= Number(page.total)) return rooms;
+  }
+}
+
 async function loadInfrastructure() {
     if (infrastructureLoading) return;
     infrastructureLoading = true;
@@ -221,13 +236,12 @@ async function loadInfrastructure() {
     areasLoaded = false;
     $('#apiStatus').textContent = 'Conectando…';
     try {
-      const [roomsResponse, areasResponse, floors, types] = await Promise.all([
-        apiRequest('/salas?limite=100'),
-        apiRequest('/areas'),
+      const [rooms, areasResponse, floors, types] = await Promise.all([
+        fetchAllRooms(),
+        apiRequest('/api/areas'),
         apiRequest('/api/pisos'),
-        apiRequest('/salas/tipos')
+        apiRequest('/api/salas/tipos')
       ]);
-      const rooms = Array.isArray(roomsResponse) ? roomsResponse : roomsResponse.items;
       if (!Array.isArray(rooms) || !Array.isArray(areasResponse) || !Array.isArray(floors) || !Array.isArray(types)) {
         throw new Error('La API devolvió datos de Planos Sede con un formato inesperado.');
       }
@@ -241,7 +255,8 @@ async function loadInfrastructure() {
         floor: String(room.piso?.numero ?? room.piso?.id ?? ''),
         pisoId: room.piso?.id,
         typeId: room.tipo?.id,
-        location: room.piso?.nombre || ''
+        active: room.activo !== false,
+        location: [room.piso?.nombre, room.activo === false ? 'Inactiva' : ''].filter(Boolean).join(' · ')
       }));
       data.areas = areasResponse.map(area => {
         const ubicacion = area.ubicacion;
@@ -692,8 +707,8 @@ function renderEntitySection(entity) {
   const callout = entity === 'faqs'
     ? `<div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Preguntas frecuentes conectadas a la API</strong>Los cambios se guardan en la base de datos y las preguntas publicadas aparecen en el tótem.</div></div>`
     : entity === 'areas'
-      ? `<div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Áreas en modo de demostración</strong>Las ubicaciones son ejemplos locales del mockup. Los cambios se guardan en este equipo, pero aún no se envían a la API ni son visibles en el tótem.</div></div>`
-      : `<div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Datos locales de demostración</strong>Los cambios se almacenan en este equipo. Aún no se envían a la API ni son visibles en el tótem.</div></div>`;
+      ? `<div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Áreas conectadas a la API</strong>Los cambios se guardan en la base de datos y el directorio del tótem se actualiza de inmediato. La ubicación se elige entre los espacios del plano.</div></div>`
+      : `<div class="callout"><span class="callout-icon">ⓘ</span><div><strong>Salas conectadas a la API</strong>Los cambios se guardan en la base de datos y son visibles en el buscador y el mapa del tótem. Se listan también las salas inactivas.</div></div>`;
   $('#appContent').innerHTML = `
     <div class="page-heading"><div><p class="eyebrow">GESTIÓN DE CONTENIDO</p><h1>${config.title.charAt(0).toUpperCase()}${config.title.slice(1)}</h1><p>${config.description}</p></div><div class="heading-actions">${headerActions}</div></div>
     <div class="toolbar"><label class="search-box"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" value="${escapeHTML(searchQuery)}" placeholder="Buscar ${config.plural}…" aria-label="Buscar ${config.plural}"></label><span class="result-count">${filtered.length} de ${list.length} registros</span></div>
@@ -898,8 +913,8 @@ async function handleModalSubmit(event) {
       pisoId: Number(record.floor),
       tipoEspacioId: Number(record.typeId),
       codigo: record.code,
-      nombre: record.name || null,
-      activo: true
+      // `activo` no se envía: al editar se conserva el estado actual (antes toda edición reactivaba la sala).
+      nombre: record.name || null
     };
     const submitButton = $('button[type="submit"]', form);
     submitButton.disabled = true;
@@ -933,7 +948,7 @@ async function handleModalSubmit(event) {
     submitButton.disabled = true;
     try {
       await apiRequest(editingId ? `/api/areas/${editingId}` : '/api/areas', {
-        method: editingId ? 'PATCH' : 'POST',
+        method: editingId ? 'PUT' : 'POST',
         body: JSON.stringify(payload)
       });
       closeModal();
