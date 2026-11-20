@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../src/common/prisma/prisma.service';
 import { FaqService } from '../../src/modulos/faq/faq.service';
@@ -13,13 +13,8 @@ describe('FaqService', () => {
   const categorias = { findMany: jest.fn() };
   const servicio = new FaqService({ pregunta_frecuente: tabla, categoria_faq: categorias } as unknown as PrismaService);
 
-  const creadorOriginal = process.env.FAQ_CREATED_BY_ID;
   beforeEach(() => {
     jest.resetAllMocks();
-    process.env.FAQ_CREATED_BY_ID = '7';
-  });
-  afterAll(() => {
-    process.env.FAQ_CREATED_BY_ID = creadorOriginal;
   });
 
   it('listar pide solo las publicadas, ordenadas por id', async () => {
@@ -68,27 +63,21 @@ describe('FaqService', () => {
     await expect(servicio.obtener(99)).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('crear fija el autor con FAQ_CREATED_BY_ID', async () => {
+  it('crear registra como autor al administrador de la sesión', async () => {
     tabla.create.mockResolvedValue({ id: 2 });
-    await servicio.crear(datosNuevos);
+    await servicio.crear(datosNuevos, 7);
     expect(tabla.create).toHaveBeenCalledWith({ data: { ...datosNuevos, creado_por_id: 7 } });
-  });
-
-  it('crear responde 503 si FAQ_CREATED_BY_ID no está configurada', () => {
-    delete process.env.FAQ_CREATED_BY_ID;
-    expect(() => servicio.crear(datosNuevos)).toThrow(ServiceUnavailableException);
-    expect(tabla.create).not.toHaveBeenCalled();
   });
 
   it('crear responde 400 si la categoría, el área o el autor no existen', async () => {
     tabla.create.mockRejectedValue(errorLlaveForanea);
-    await expect(servicio.crear(datosNuevos)).rejects.toBeInstanceOf(BadRequestException);
+    await expect(servicio.crear(datosNuevos, 7)).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('crear deja pasar otros errores de la base sin disfrazarlos', async () => {
     const otro = new Error('sin conexión');
     tabla.create.mockRejectedValue(otro);
-    await expect(servicio.crear(datosNuevos)).rejects.toBe(otro);
+    await expect(servicio.crear(datosNuevos, 7)).rejects.toBe(otro);
   });
 
   it('actualizar edita solo los campos enviados, también en borradores', async () => {

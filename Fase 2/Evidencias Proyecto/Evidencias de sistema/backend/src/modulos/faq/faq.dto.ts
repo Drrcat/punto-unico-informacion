@@ -3,7 +3,7 @@ import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } fr
 
 /**
  * Datos para crear una pregunta frecuente (POST /api/faq). Siguen las columnas de `pregunta_frecuente`.
- * El autor no se envía: lo fija el backend con FAQ_CREATED_BY_ID.
+ * El autor no se envía: es el administrador de la sesión.
  * class-validator revisa los decoradores de abajo hacia arriba: el más básico va al final para que su
  * mensaje sea el primero de la respuesta.
  */

@@ -278,6 +278,7 @@ async function loadFaqs() {
     return false;
   } finally {
     faqLoading = false;
+    $('#faqNavCount').textContent = faqLoaded ? data.faqs.length : '—';
     if (activeSection === 'faqs') renderEntitySection('faqs');
     else if (activeSection === 'overview') renderOverview();
   }

@@ -7,6 +7,9 @@ export const PERMISOS = {
   AREA_EDITAR: 'area.editar',
   AREA_ELIMINAR: 'area.eliminar',
   ENROLAMIENTO_VER: 'enrolamiento.ver',
+  FAQ_CREAR: 'faq.crear',
+  FAQ_EDITAR: 'faq.editar',
+  FAQ_ELIMINAR: 'faq.eliminar',
 } as const;
 
 export const DESCRIPCION_PERMISOS: Record<string, string> = {
@@ -17,4 +20,7 @@ export const DESCRIPCION_PERMISOS: Record<string, string> = {
   [PERMISOS.AREA_EDITAR]: 'Editar áreas institucionales.',
   [PERMISOS.AREA_ELIMINAR]: 'Eliminar áreas institucionales.',
   [PERMISOS.ENROLAMIENTO_VER]: 'Consultar el estado de las solicitudes de enrolamiento.',
+  [PERMISOS.FAQ_CREAR]: 'Crear preguntas frecuentes.',
+  [PERMISOS.FAQ_EDITAR]: 'Editar preguntas frecuentes y ver los borradores.',
+  [PERMISOS.FAQ_ELIMINAR]: 'Eliminar preguntas frecuentes.',
 };

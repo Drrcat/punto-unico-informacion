@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { incluirUbicacion, vistaUbicacion } from '../../common/util/vistas';
@@ -67,13 +67,8 @@ export class FaqService {
     return vistaPublica(faq);
   }
 
-  crear(datos: CrearFaqDto) {
-    const creadorId = Number(process.env.FAQ_CREATED_BY_ID);
-    if (!Number.isInteger(creadorId) || creadorId < 1) {
-      throw new ServiceUnavailableException(
-        'Configura FAQ_CREATED_BY_ID con el id de un usuario existente antes de crear preguntas frecuentes',
-      );
-    }
+  /** El autor es el administrador que la crea (lo entrega el controlador desde la sesión). */
+  crear(datos: CrearFaqDto, creadorId: number) {
     return this.guardar(() =>
       this.prisma.pregunta_frecuente.create({
         data: {
