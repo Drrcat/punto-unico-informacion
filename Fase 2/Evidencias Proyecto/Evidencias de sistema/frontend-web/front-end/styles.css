@@ -1,23 +1,30 @@
-/* ===== Colores (los mismos de la app de escritorio, para que se vean como un solo sistema) ===== */
+/* ===== Colores (los mismos de la app de escritorio, para que se vean como un solo sistema) =====
+   Identidad OrientaSede: azul profundo, turquesa y lima (ver escritorio/src/styles.css). */
 :root {
-  --tinta: #172033;        /* texto principal */
-  --apagado: #7b8497;      /* texto secundario */
-  --linea: #e8ebf2;        /* bordes suaves */
-  --azul: #315de8;         /* color principal */
-  --azul-oscuro: #2449c8;
-  --azul-palido: #eef3ff;
-  --azul-noche: #14244f;   /* inicio del degradado de la cabecera */
-  --fondo: #f5f7fb;
+  --tinta: #173f50;            /* texto principal */
+  --apagado: #66777b;          /* texto secundario */
+  --texto-suave: #3d5560;      /* párrafos largos */
+  --linea: #dde7df;            /* bordes suaves */
+  --borde: #d4e2db;            /* bordes de campos y botones */
+  --principal: #173f50;        /* color principal: botones y elementos activos */
+  --principal-hover: #0f3341;
+  --principal-palido: #e2f3ee;
+  --turquesa: #3faaa7;
+  --turquesa-claro: #55cbc4;
+  --lima: #a9dc67;
+  --lima-palido: #edf7d9;
+  --noche: #173f50;            /* inicio del degradado de la cabecera */
+  --fondo: #f4f6f0;
   --blanco: #ffffff;
-  --verde: #1c9b71;
-  --sombra: 0 18px 48px rgba(20, 34, 68, 0.08);
+  --verde: #4f742f;            /* confirmaciones (✓) */
+  --sombra: 0 18px 48px rgba(23, 63, 80, 0.10);
 }
 
 /* ===== Base ===== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
   background-color: var(--fondo);
   color: var(--tinta);
   min-height: 100vh;
@@ -30,14 +37,21 @@ body {
 button, input { font: inherit; }
 button { cursor: pointer; }
 button:focus-visible, input:focus-visible, a:focus-visible {
-  outline: 3px solid rgba(49, 93, 232, 0.3);
+  outline: 3px solid rgba(85, 203, 196, 0.55);
   outline-offset: 2px;
 }
 [hidden] { display: none !important; }
 
+/* Títulos con la misma tipografía de la app de escritorio */
+h1, h2, h3, .marca strong, .opcion-menu strong, .aviso-caja h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
 /* ===== Cabecera (degradado igual al panel lateral del escritorio) ===== */
 .barra-superior {
-  background: linear-gradient(140deg, var(--azul-noche) 0%, #1d367c 53%, var(--azul) 100%);
+  background: linear-gradient(140deg, var(--noche) 0%, #225b65 58%, var(--turquesa) 100%);
   padding: 22px 32px;
   display: flex;
   align-items: center;
@@ -51,14 +65,15 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: linear-gradient(145deg, #547aff, #2b50d8);
+  background: var(--lima);
+  color: var(--tinta);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
   font-size: 20px;
   font-weight: 850;
   letter-spacing: -0.06em;
 }
 .marca strong { display: block; font-size: 20px; letter-spacing: -0.02em; }
-.marca small { display: block; color: #c4d0f2; font-size: 14px; margin-top: 2px; }
+.marca small { display: block; color: #dcece9; font-size: 14px; margin-top: 2px; }
 
 /* Botón "Volver al inicio" de las pantallas internas */
 .boton-volver {
@@ -101,7 +116,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   text-decoration: none;
   transition: transform 0.12s;
 }
-.opcion-menu:active { transform: scale(0.98); background: var(--azul-palido); }
+.opcion-menu:active { transform: scale(0.98); background: var(--principal-palido); }
 .icono-menu {
   display: grid;
   place-items: center;
@@ -109,13 +124,15 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   width: 76px;
   height: 76px;
   border-radius: 20px;
-  background: var(--azul-palido);
-  color: var(--azul);
+  background: var(--principal-palido);
+  color: var(--principal);
   font-size: 36px;
 }
+.opcion-menu:nth-child(3n+2) .icono-menu { background: var(--lima-palido); color: var(--verde); }
+.opcion-menu:nth-child(3n) .icono-menu { background: #daf1f0; color: #257b78; }
 .opcion-menu strong { display: block; font-size: 26px; letter-spacing: -0.03em; }
 .opcion-menu small { display: block; color: var(--apagado); font-size: 17px; margin-top: 6px; line-height: 1.4; }
-.flecha { margin-left: auto; color: var(--azul); font-size: 30px; }
+.flecha { margin-left: auto; color: var(--turquesa); font-size: 30px; }
 
 /* ===== Buscador ===== */
 .buscador {
@@ -124,23 +141,23 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   font-size: 20px;
   color: var(--tinta);
   background: var(--blanco);
-  border: 1px solid #dfe4ee;
+  border: 1px solid var(--borde);
   border-radius: 16px;
   outline: none;
   margin-bottom: 12px;
   user-select: text;
 }
-.buscador::placeholder { color: #a1a9b8; }
-.buscador:focus { border-color: #718df3; box-shadow: 0 0 0 4px rgba(49, 93, 232, 0.12); }
+.buscador::placeholder { color: #93a39f; }
+.buscador:focus { border-color: var(--turquesa-claro); box-shadow: 0 0 0 4px rgba(85, 203, 196, 0.16); }
 .contador { color: var(--apagado); font-size: 15px; margin: 0 4px 18px; }
 
 /* ===== Tarjetas desplegables (FAQ, áreas, trámites) ===== */
 .tarjeta {
   background: var(--blanco);
   border: 1px solid var(--linea);
-  border-left: 6px solid var(--azul);
+  border-left: 6px solid var(--turquesa);
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(20, 34, 68, 0.05);
+  box-shadow: 0 2px 8px rgba(23, 63, 80, 0.05);
   margin-bottom: 14px;
   overflow: hidden;
 }
@@ -166,13 +183,13 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: var(--azul-palido);
-  color: var(--azul);
+  background: var(--principal-palido);
+  color: var(--principal);
   font-size: 26px;
   font-weight: 600;
 }
 .tarjeta.abierta .tarjeta-boton::after { content: "−"; }
-.tarjeta.abierta { border-left-color: var(--azul-oscuro); }
+.tarjeta.abierta { border-left-color: var(--principal); }
 
 /* Las tarjetas que abren otra vista muestran una flecha en vez de "+" */
 .tarjeta.navega .tarjeta-boton::after { content: "›"; font-size: 30px; }
@@ -181,7 +198,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   padding: 0 24px 24px;
   font-size: 18px;
   line-height: 1.55;
-  color: #3a4459;
+  color: var(--texto-suave);
   display: none;   /* oculto por defecto */
 }
 .tarjeta.abierta .tarjeta-detalle { display: block; }
@@ -191,8 +208,8 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   display: inline-flex;
   padding: 5px 10px;
   border-radius: 8px;
-  background: var(--azul-palido);
-  color: #4964b3;
+  background: var(--principal-palido);
+  color: var(--tinta);
   font-size: 13px;
   font-weight: 750;
   margin-bottom: 8px;
@@ -221,7 +238,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   padding: 28px;
 }
 .detalle-tramite h2 { font-size: 30px; letter-spacing: -0.03em; margin-bottom: 10px; }
-.detalle-tramite > p { font-size: 18px; color: #3a4459; line-height: 1.55; }
+.detalle-tramite > p { font-size: 18px; color: var(--texto-suave); line-height: 1.55; }
 .detalle-tramite h3 { font-size: 21px; margin: 28px 0 14px; }
 .resumen-tramite { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 18px; }
 
@@ -234,13 +251,13 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: var(--azul);
+  background: var(--principal);
   color: var(--blanco);
   font-size: 19px;
   font-weight: 800;
 }
 .paso strong { display: block; font-size: 19px; }
-.paso p { font-size: 17px; color: #3a4459; margin-top: 4px; line-height: 1.5; }
+.paso p { font-size: 17px; color: var(--texto-suave); margin-top: 4px; line-height: 1.5; }
 
 .requisitos { list-style: none; display: grid; gap: 10px; }
 .requisito { display: flex; align-items: center; gap: 12px; font-size: 18px; padding: 14px 16px; border-radius: 12px; background: var(--fondo); }
@@ -254,14 +271,14 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   min-height: 56px;
   padding: 0 22px;
   margin-bottom: 18px;
-  border: 1px solid #dfe4ee;
+  border: 1px solid var(--borde);
   border-radius: 14px;
   background: var(--blanco);
-  color: #48536b;
+  color: var(--tinta);
   font-size: 18px;
   font-weight: 700;
 }
-.boton-secundario:active { background: var(--azul-palido); }
+.boton-secundario:active { background: var(--principal-palido); }
 
 /* ===== Mensajes (cargando, error, sin resultados) ===== */
 .mensaje {
@@ -270,7 +287,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   color: var(--apagado);
   font-size: 18px;
   background: var(--blanco);
-  border: 1px dashed #dfe4ee;
+  border: 1px dashed var(--borde);
   border-radius: 16px;
 }
 .mensaje.error { color: #c33c48; border-color: #ffdddd; background: #fff8f8; }
@@ -278,7 +295,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 /* ===== Pie ===== */
 .pie {
   text-align: center;
-  color: #a0a8b6;
+  color: #8a9a96;
   font-size: 14px;
   padding: 24px;
   border-top: 1px solid var(--linea);
@@ -292,7 +309,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 html, body { touch-action: pan-y; overscroll-behavior: none; }
 
 /* Respuesta visual al tocar (en pantalla táctil no existe "hover") */
-.tarjeta-boton:active { background: var(--azul-palido); }
+.tarjeta-boton:active { background: var(--principal-palido); }
 
 /* Aviso "¿Sigues ahí?" antes de volver al inicio por inactividad */
 .aviso-inactividad {
@@ -302,7 +319,7 @@ html, body { touch-action: pan-y; overscroll-behavior: none; }
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(19, 29, 52, 0.55);
+  background: rgba(15, 40, 50, 0.55);
   backdrop-filter: blur(4px);
 }
 .aviso-caja {
@@ -310,24 +327,24 @@ html, body { touch-action: pan-y; overscroll-behavior: none; }
   padding: 40px 32px;
   border-radius: 24px;
   background: var(--blanco);
-  box-shadow: 0 25px 90px rgba(10, 20, 45, 0.3);
+  box-shadow: 0 25px 90px rgba(10, 35, 45, 0.3);
   text-align: center;
 }
 .aviso-caja h2 { font-size: 34px; letter-spacing: -0.03em; }
 .aviso-caja p { font-size: 20px; color: var(--apagado); margin: 12px 0 28px; }
-.aviso-caja b { color: var(--azul); }
+.aviso-caja b { color: var(--principal); }
 .aviso-boton {
   width: 100%;
   min-height: 72px;
   border: none;
   border-radius: 16px;
-  background: var(--azul);
+  background: var(--principal);
   color: var(--blanco);
   font-size: 22px;
   font-weight: 750;
-  box-shadow: 0 5px 12px rgba(49, 93, 232, 0.2);
+  box-shadow: 0 5px 12px rgba(23, 63, 80, 0.18);
 }
-.aviso-boton:active { background: var(--azul-oscuro); }
+.aviso-boton:active { background: var(--principal-hover); }
 
 /* ===== Mapa y Salas ===== */
 /* La página del mapa ocupa exactamente la pantalla: barra arriba y el mapa de Patricia en el resto */
@@ -347,27 +364,27 @@ body.pagina-mapa { height: 100vh; overflow: hidden; }
   padding: 0 20px;
   margin-top: 16px;
   border-radius: 14px;
-  background: var(--azul);
+  background: var(--principal);
   color: var(--blanco);
   font-size: 18px;
   font-weight: 700;
   text-decoration: none;
 }
-.boton-mapa:active { background: var(--azul-oscuro); }
+.boton-mapa:active { background: var(--principal-hover); }
 
 /* ===== Salas y espacios ===== */
 .filtros { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
 .filtro {
   min-height: 52px;
   padding: 0 20px;
-  border: 1px solid #dfe4ee;
+  border: 1px solid var(--borde);
   border-radius: 999px;
   background: var(--blanco);
-  color: #48536b;
+  color: var(--tinta);
   font-size: 17px;
   font-weight: 700;
 }
-.filtro.activo { background: var(--azul); border-color: var(--azul); color: var(--blanco); }
+.filtro.activo { background: var(--principal); border-color: var(--principal); color: var(--blanco); }
 .filtros + .contador { margin-top: 8px; }
 
 .fila-sala { display: flex; align-items: center; gap: 16px; padding: 20px 24px; }
@@ -387,7 +404,7 @@ body.pagina-mapa { height: 100vh; overflow: hidden; }
   font-size: 16px;
   font-weight: 700;
 }
-.etapas li.activa { background: var(--azul); border-color: var(--azul); color: var(--blanco); }
+.etapas li.activa { background: var(--principal); border-color: var(--principal); color: var(--blanco); }
 
 .panel {
   display: grid;
@@ -416,20 +433,20 @@ body.pagina-mapa { height: 100vh; overflow: hidden; }
   padding: 0 28px;
   border: none;
   border-radius: 16px;
-  background: var(--azul);
+  background: var(--principal);
   color: var(--blanco);
   font-size: 21px;
   font-weight: 750;
   text-decoration: none;
-  box-shadow: 0 5px 12px rgba(49, 93, 232, 0.2);
+  box-shadow: 0 5px 12px rgba(23, 63, 80, 0.18);
 }
-.boton-principal:active { background: var(--azul-oscuro); }
+.boton-principal:active { background: var(--principal-hover); }
 .boton-principal:disabled { opacity: 0.6; }
 
 .camara {
   overflow: hidden;
   border-radius: 16px;
-  background: var(--azul-noche);
+  background: var(--noche);
   aspect-ratio: 4 / 3;
 }
 .camara video, .camara img { display: block; width: 100%; height: 100%; object-fit: cover; }

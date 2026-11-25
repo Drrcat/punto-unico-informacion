@@ -14,23 +14,25 @@
      Toda la interfaz está en rem: 1rem = 1/29 del ancho del tótem.
      ===================================================================== */
   :root{
-    --ink:#0C2B36;          /* color principal: encabezado y controles activos */
+    --ink:#173f50;          /* color principal: encabezado y controles activos */
     --dest:#D9430E;         /* destino: lo que el visitante busca */
     --dest-soft:#FFE1D2;
     --dest-dark:#7A2205;
-    --paper:#F3F6F7;
-    --line:#D9E1E5;
-    --text:#0C2B36;
-    --muted:#5C7380;
-    --chip:#E3EBEE;
-    --map:#EAF0F2;
+    --paper:#f4f6f0;
+    --line:#dde7df;
+    --text:#173f50;
+    --muted:#66777b;
+    --chip:#e2f3ee;
+    --map:#eaf1ea;
+    --lima:#a9dc67;         /* identidad OrientaSede (igual que la app de escritorio) */
+    --turquesa:#55cbc4;
     --fuente:'Barlow','Segoe UI',system-ui,-apple-system,sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:#071A21;font-family:var(--fuente);font-weight:500;color:var(--text)}
+  html,body{margin:0;height:100%;background:#0f3341;font-family:var(--fuente);font-weight:500;color:var(--text)}
   button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
   svg{display:block}
-  :focus-visible{outline:.18rem solid #7FD0E0;outline-offset:.12rem}
+  :focus-visible{outline:.18rem solid var(--turquesa);outline-offset:.12rem}
 
   /* ===== Marco del tótem ===== */
   .totem-wrap{width:100%;height:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
@@ -45,22 +47,22 @@
   .app{display:flex;flex-direction:column;height:100%;width:100%}
 
   /* ===== Encabezado ===== */
-  header{background:var(--ink);color:#fff;flex-shrink:0;padding:.85rem 1rem .9rem}
+  header{background:linear-gradient(140deg,#173f50 0%,#225b65 70%,#3faaa7 100%);color:#fff;flex-shrink:0;padding:.85rem 1rem .9rem}
   .marca{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem}
-  .logo{width:2.5rem;height:2.5rem;border-radius:.7rem;background:var(--dest);color:#fff;display:grid;place-items:center;flex-shrink:0;overflow:hidden}
+  .logo{width:2.5rem;height:2.5rem;border-radius:.7rem;background:var(--lima);color:var(--ink);display:grid;place-items:center;flex-shrink:0;overflow:hidden}
   .logo svg{width:1.45rem;height:1.45rem}
   .logo img{width:100%;height:100%;object-fit:contain;background:#fff}
   .marca-txt h1{margin:0;font-size:1.15rem;line-height:1.1;font-weight:700}
-  .marca-txt p{margin:.18rem 0 0;font-size:.8rem;color:#9FB6BF}
+  .marca-txt p{margin:.18rem 0 0;font-size:.8rem;color:#dcece9}
   .reloj{margin-left:auto;text-align:right;line-height:1.1}
   .reloj b{display:block;font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums}
-  .reloj span{font-size:.74rem;color:#9FB6BF}
+  .reloj span{font-size:.74rem;color:#dcece9}
 
   .buscar{display:flex;align-items:center;gap:.6rem;background:#fff;border-radius:.9rem;padding:0 .4rem 0 .95rem;height:3.2rem;color:var(--muted);cursor:text}
-  .buscar:focus-within{box-shadow:0 0 0 .2rem #7FD0E0}
+  .buscar:focus-within{box-shadow:0 0 0 .2rem var(--turquesa)}
   .buscar > svg{width:1.3rem;height:1.3rem;flex-shrink:0}
   .buscar input{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;font:inherit;font-size:1.08rem;color:var(--text)}
-  .buscar input::placeholder{color:#7F96A1}
+  .buscar input::placeholder{color:#8a9a96}
   .borrar{width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:var(--chip);color:var(--ink);display:grid;place-items:center;cursor:pointer;flex-shrink:0}
   .borrar svg{width:1.1rem;height:1.1rem}
   .borrar[hidden]{display:none}
@@ -89,7 +91,7 @@
   .d-texto span{display:block;margin-top:.2rem;font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dato{width:3.1rem;height:3.1rem;border-radius:.75rem;background:var(--ink);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;flex-shrink:0}
   .dato b{font-size:1.45rem;font-weight:700}
-  .dato span{margin-top:.2rem;font-size:.64rem;color:#B5CAD2}
+  .dato span{margin-top:.2rem;font-size:.64rem;color:#c3dcd6}
   .d-nav{display:flex;align-items:center;flex-shrink:0}
   .d-nav button{width:2.5rem;height:2.5rem;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--ink);display:grid;place-items:center;cursor:pointer}
   .d-nav button:active{background:var(--chip)}
@@ -116,7 +118,7 @@
   .niveles{
     position:absolute;left:.6rem;bottom:.6rem;z-index:5;display:flex;flex-direction:column;align-items:center;gap:.4rem;
     padding:.5rem .4rem .4rem;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:1.6rem;
-    box-shadow:0 2px 8px rgba(12,43,54,.14)
+    box-shadow:0 2px 8px rgba(23,63,80,.14)
   }
   .niveles small{font-size:.7rem;font-weight:700;color:var(--muted)}
   .niveles button{position:relative;width:2.8rem;height:2.8rem;border:0;border-radius:50%;background:var(--chip);color:var(--ink);font-size:1.3rem;font-weight:700;cursor:pointer}
@@ -129,7 +131,7 @@
 
   .zoom{
     position:absolute;right:.6rem;bottom:.6rem;z-index:5;display:flex;flex-direction:column;overflow:hidden;
-    background:#fff;border:1px solid var(--line);border-radius:.9rem;box-shadow:0 2px 8px rgba(12,43,54,.14)
+    background:#fff;border:1px solid var(--line);border-radius:.9rem;box-shadow:0 2px 8px rgba(23,63,80,.14)
   }
   .zoom button{width:2.9rem;height:2.9rem;border:0;background:#fff;color:var(--ink);display:grid;place-items:center;cursor:pointer}
   .zoom button + button{border-top:1px solid var(--line)}
@@ -143,7 +145,7 @@
   .torre-tag{
     position:absolute;left:0;top:0;display:inline-flex;align-items:center;gap:.2rem;height:2.6rem;padding:0 .65rem 0 1rem;
     border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font-size:.95rem;font-weight:700;
-    white-space:nowrap;cursor:pointer;box-shadow:0 2px 8px rgba(12,43,54,.14)
+    white-space:nowrap;cursor:pointer;box-shadow:0 2px 8px rgba(23,63,80,.14)
   }
   .torre-tag svg{width:1.1rem;height:1.1rem}
   .torre-tag:active{background:var(--chip)}
@@ -306,7 +308,7 @@
     producto: 'OrientaSede',
     sede: 'Sede principal',           // nombre de la institución o del edificio
     logoUrl: '',                      // dirección de una imagen; vacío usa el ícono del producto
-    colorPrincipal: '#0C2B36',        // encabezado y controles activos
+    colorPrincipal: '#173f50',        // encabezado y controles activos
     colorDestino: '#D9430E',          // lugar buscado y resultados
     inactividadS: 60,                 // en producción viene de configuracion_sistema
     apiBase: '',                      // dirección del backend; vacío = el servidor que entrega esta página
@@ -924,8 +926,8 @@
       document.body.appendChild(el);
     }
     const hora = api.ultima ? api.ultima.toLocaleTimeString('es-CL', { hour12: false }) : '';
-    if (!api.activa){ el.style.background = '#667F8D'; el.textContent = 'API desactivada · se usan los datos del archivo'; }
-    else if (api.conectada){ el.style.background = '#1F7A4D'; el.textContent = 'API conectada · actualizado ' + hora; }
+    if (!api.activa){ el.style.background = '#66777b'; el.textContent = 'API desactivada · se usan los datos del archivo'; }
+    else if (api.conectada){ el.style.background = '#4f742f'; el.textContent = 'API conectada · actualizado ' + hora; }
     else { el.style.background = '#B45309'; el.textContent = 'Sin conexión con la API · se usan los datos del archivo'; }
   }
   function marcarApi(ok, error){
