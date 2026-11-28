@@ -137,6 +137,12 @@ export async function ejecutarSeed(prisma: PrismaClient, o: OpcionesSeed): Promi
         skipDuplicates: true,
       });
 
+      // Categorías base de preguntas frecuentes: sin ellas no se puede crear la primera pregunta desde el panel
+      await tx.categoria_faq.createMany({
+        data: ['General', 'Matrícula y pagos', 'Trámites y certificados', 'Vida estudiantil'].map((nombre, i) => ({ nombre, orden: i + 1 })),
+        skipDuplicates: true,
+      });
+
       // Permisos y rol Administrador
       for (const [codigo, descripcion] of Object.entries(DESCRIPCION_PERMISOS)) {
         await tx.permiso.upsert({ where: { codigo }, update: {}, create: { codigo, descripcion } });
